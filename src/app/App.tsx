@@ -20,7 +20,10 @@ type View =
   | "comprobante"
   | "panel"
   | "inspeccion"
-  | "auditoria";
+  | "auditoria"
+  | "declaracion-sag"
+  | "registro-mascotas"
+  | "declaracion-mercancias";
 
 type UserType = "ciudadano" | "funcionario";
 
@@ -134,6 +137,7 @@ function LoginScreen({
   const [instMode, setInstMode] = useState(false);
   const [instRut, setInstRut] = useState("");
   const [instPwd, setInstPwd] = useState("");
+  const [activeModal, setActiveModal] = useState<"tramites" | "pasos" | "ayuda" | null>(null);
 
   function handleCitizenSubmit() {
     if (!rut.trim() || !pwd.trim()) { toast.error("Ingrese RUT y contraseña"); return; }
@@ -153,10 +157,13 @@ function LoginScreen({
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
         <SiafLogo />
         <nav className="flex items-center gap-6">
-          {["Trámites","Pasos Fronterizos","Ayuda"].map(l => (
-            <button key={l} className="text-sm text-white font-medium hover:opacity-80">{l}</button>
-          ))}
-          <button className="border border-white text-white text-sm font-medium px-5 py-1.5 rounded-md hover:bg-white/10">Ingresar</button>
+          <button onClick={() => setActiveModal("tramites")} className="text-sm text-white font-medium hover:opacity-80">Trámites</button>
+          <button onClick={() => setActiveModal("pasos")} className="text-sm text-white font-medium hover:opacity-80">Pasos Fronterizos</button>
+          <button onClick={() => setActiveModal("ayuda")} className="text-sm text-white font-medium hover:opacity-80">Ayuda</button>
+          <button onClick={() => {
+            const el = document.getElementById("acceso-sistema");
+            el?.scrollIntoView({ behavior: "smooth" });
+          }} className="border border-white text-white text-sm font-medium px-5 py-1.5 rounded-md hover:bg-white/10">Ingresar</button>
         </nav>
       </header>
 
@@ -174,7 +181,7 @@ function LoginScreen({
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 -mt-48 pb-32 grid grid-cols-7 gap-8">
         {/* Left — citizen */}
-        <div className="col-span-7 md:col-span-4 bg-white rounded-xl shadow-xl p-10">
+        <div id="acceso-sistema" className="col-span-7 md:col-span-4 bg-white rounded-xl shadow-xl p-10">
           <h2 className="text-[#031636] text-2xl font-bold mb-1">Acceso al Sistema</h2>
           <p className="text-gray-500 text-sm mb-8">Elija su método de autenticación preferido.</p>
 
@@ -322,6 +329,122 @@ function LoginScreen({
           <p className="text-white/30 text-xs text-center tracking-widest uppercase">© 2024 SERVICIO NACIONAL DE ADUANAS — GOBIERNO DE CHILE</p>
         </div>
       </footer>
+
+      {/* --- MODAL TRÁMITES --- */}
+      {activeModal === "tramites" && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-8 shadow-2xl relative border border-gray-100">
+            <button onClick={() => setActiveModal(null)} className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">✕</button>
+            <h3 className="text-2xl font-bold text-[#031636] mb-4 flex items-center gap-2">
+              <span>📋</span> Trámites Habilitados en SIAF
+            </h3>
+            <p className="text-[#44474e] text-sm mb-6 leading-relaxed">
+              SIAF permite realizar los siguientes trámites de control fronterizo y aduanero de manera 100% digital anticipada:
+            </p>
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="text-xl">🚗</div>
+                <div>
+                  <h4 className="font-bold text-sm text-black">Registro y Salida Temporal de Vehículos (RF-02)</h4>
+                  <p className="text-xs text-[#6b7280] mt-0.5">Permiso de salida temporal para vehículos con patente nacional.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="text-xl">🌿</div>
+                <div>
+                  <h4 className="font-bold text-sm text-black">Declaración Jurada Conjunta SAG-Aduanas (RF-04)</h4>
+                  <p className="text-xs text-[#6b7280] mt-0.5">Declaración obligatoria de productos biológicos, vegetales o derivados animales.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="text-xl">🐾</div>
+                <div>
+                  <h4 className="font-bold text-sm text-black">Registro Sanitario de Mascotas</h4>
+                  <p className="text-xs text-[#6b7280] mt-0.5">Validación de certificados zoosanitarios y microchips para perros, gatos u otros animales domésticos.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="text-xl">📦</div>
+                <div>
+                  <h4 className="font-bold text-sm text-black">Declaración de Mercancías y Equipaje (RF-05)</h4>
+                  <p className="text-xs text-[#6b7280] mt-0.5">Declaración de aranceles para bienes y equipajes que exceden la franquicia de USD 500.</p>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => setActiveModal(null)} className="w-full bg-[#031636] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#0c2a5e] transition-colors mt-8">
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL PASOS FRONTERIZOS --- */}
+      {activeModal === "pasos" && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-8 shadow-2xl relative border border-gray-100">
+            <button onClick={() => setActiveModal(null)} className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">✕</button>
+            <h3 className="text-2xl font-bold text-[#031636] mb-2 flex items-center gap-2">
+              <span>🏔️</span> Estado de Pasos Fronterizos
+            </h3>
+            <p className="text-[#6b7280] text-sm mb-6">Información actualizada de congestión y tiempos de espera promedio.</p>
+            <div className="space-y-4">
+              {[
+                { nombre: "Los Libertadores (Cristo Redentor)", estado: "Operativo", espera: "18 min", carga: 72 },
+                { nombre: "Cardenal Samoré", estado: "Operativo", espera: "8 min", carga: 35 },
+                { nombre: "Paso Pehuenche", estado: "Operativo", espera: "5 min", carga: 20 },
+                { nombre: "Paso Colchane (Pisiga)", estado: "Alta demanda", espera: "45 min", carga: 90 },
+              ].map(paso => (
+                <div key={paso.nombre} className="border border-gray-100 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-sm text-black">{paso.nombre}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${paso.estado === "Operativo" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
+                      {paso.estado}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                      <div className={`h-full rounded-full ${paso.carga > 80 ? "bg-red-500" : paso.carga > 60 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${paso.carga}%` }} />
+                    </div>
+                    <span className="text-xs text-gray-500 shrink-0 font-semibold">~{paso.espera}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setActiveModal(null)} className="w-full bg-[#031636] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#0c2a5e] transition-colors mt-6">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL AYUDA --- */}
+      {activeModal === "ayuda" && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl relative border border-gray-100">
+            <button onClick={() => setActiveModal(null)} className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">✕</button>
+            <h3 className="text-2xl font-bold text-[#031636] mb-4 flex items-center gap-2">
+              <span>💡</span> Centro de Ayuda SIAF
+            </h3>
+            <div className="space-y-4 text-sm text-[#44474e] leading-relaxed">
+              <div>
+                <h4 className="font-bold text-black text-sm">¿Cómo ingreso al sistema?</h4>
+                <p className="text-xs text-[#6b7280] mt-1">Puede ingresar de forma segura usando su <strong>ClaveÚnica</strong> del Registro Civil, o bien mediante su RUT y contraseña registrada.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-black text-sm">¿Qué es el código QR generado?</h4>
+                <p className="text-xs text-[#6b7280] mt-1">Es el comprobante digital con firma criptográfica. Al presentarlo en ventanilla, el funcionario escaneará el código validando su trámite en 5 segundos.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-black text-sm">¿Tiene problemas técnicos?</h4>
+                <p className="text-xs text-[#6b7280] mt-1">Llámenos a la mesa de ayuda al número <strong>600 570 7040</strong> (lunes a domingo, 24 horas) o escríbanos a <strong>soporte@aduanas.cl</strong>.</p>
+              </div>
+            </div>
+            <button onClick={() => setActiveModal(null)} className="w-full bg-[#031636] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#0c2a5e] transition-colors mt-6">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -449,7 +572,6 @@ function RecuperarScreen({ onBack }: { onBack: () => void }) {
 
 // ─── REGISTRO DE USUARIO ──────────────────────────────────────────
 function RegistroUsuarioScreen({ onBack, onComplete }: { onBack: () => void; onComplete: () => void }) {
-  const [tipo, setTipo] = useState<"pasajero" | "funcionario">("pasajero");
   const [rut, setRut] = useState("");
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -493,17 +615,7 @@ function RegistroUsuarioScreen({ onBack, onComplete }: { onBack: () => void; onC
         </button>
 
         <h2 className="text-2xl font-bold text-[#031636] mb-1">Registro de Nuevo Usuario</h2>
-        <p className="text-[#6b7280] text-sm mb-8">Cree su cuenta en el Sistema SIAF.</p>
-
-        <div className="flex gap-3 mb-8">
-          {(["pasajero","funcionario"] as const).map(t => (
-            <button key={t} onClick={() => setTipo(t)}
-              className={`flex-1 py-3 rounded-xl text-sm font-semibold border-2 transition-all
-                ${tipo === t ? "border-[#031636] bg-[#031636] text-white" : "border-gray-200 text-[#44474e] hover:border-gray-300"}`}>
-              {t === "pasajero" ? "🧳 Pasajero" : "🏛 Funcionario"}
-            </button>
-          ))}
-        </div>
+        <p className="text-[#6b7280] text-sm mb-8">Cree su cuenta de viajero en el Sistema SIAF.</p>
 
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
@@ -523,13 +635,6 @@ function RegistroUsuarioScreen({ onBack, onComplete }: { onBack: () => void; onC
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.cl"
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none focus:border-[#031636] transition-colors" />
           </div>
-          {tipo === "funcionario" && (
-            <div>
-              <label className="text-xs font-bold text-[#6b7280] uppercase tracking-[0.5px]">Código Institucional</label>
-              <input placeholder="Código asignado por Aduanas"
-                className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none focus:border-[#031636] transition-colors" />
-            </div>
-          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-bold text-[#6b7280] uppercase tracking-[0.5px]">Contraseña *</label>
@@ -575,15 +680,15 @@ function RegistroUsuarioScreen({ onBack, onComplete }: { onBack: () => void; onC
 
 // ─── DASHBOARD CIUDADANO ──────────────────────────────────────────
 function DashboardCiudadano({ userName, onStartTramite, onLogout }: {
-  userName: string; onStartTramite: () => void; onLogout: () => void;
+  userName: string; onStartTramite: (view: View) => void; onLogout: () => void;
 }) {
+  const [showHelp, setShowHelp] = useState(false);
+
   const servicios = [
-    { icon: "🚗", title: "Registro de Vehículo", desc: "Declare los datos de su vehículo para cruzar la frontera (RF-02).", badge: "Disponible", badgeColor: "green" as const, action: onStartTramite, primary: true },
-    { icon: "🌿", title: "Declaración SAG", desc: "Declare productos de origen vegetal, animal o alimentos (RF-04).", badge: "Disponible", badgeColor: "green" as const, action: onStartTramite, primary: false },
-    { icon: "🐾", title: "Registro de Mascotas", desc: "Viaje con su mascota. Ingrese antecedentes sanitarios requeridos.", badge: "Disponible", badgeColor: "green" as const, action: onStartTramite, primary: false },
-    { icon: "📦", title: "Declaración de Mercancías", desc: "Declare artículos de valor o bienes que lleva consigo.", badge: "Próximamente", badgeColor: "gray" as const, action: () => toast.info("Módulo en desarrollo"), primary: false },
-    { icon: "📋", title: "Pre-digitación Online", desc: "Complete su trámite antes de llegar al paso fronterizo (RF-11).", badge: "Nuevo", badgeColor: "blue" as const, action: onStartTramite, primary: false },
-    { icon: "📜", title: "Historial de Trámites", desc: "Consulte sus trámites anteriores y estados de solicitudes.", badge: "Disponible", badgeColor: "green" as const, action: () => toast.info("Cargando historial..."), primary: false },
+    { icon: "🚗", title: "Registro de Vehículo", desc: "Declare los datos de su vehículo para cruzar la frontera (RF-02).", badge: "Disponible", badgeColor: "green" as const },
+    { icon: "🌿", title: "Declaración SAG", desc: "Declare productos de origen vegetal, animal o alimentos (RF-04).", badge: "Disponible", badgeColor: "green" as const },
+    { icon: "🐾", title: "Registro de Mascotas", desc: "Viaje con su mascota. Ingrese antecedentes sanitarios requeridos.", badge: "Disponible", badgeColor: "green" as const },
+    { icon: "📦", title: "Declaración de Mercancías", desc: "Declare artículos de valor o bienes que lleva consigo.", badge: "Disponible", badgeColor: "green" as const },
   ];
 
   const pasos = [
@@ -600,9 +705,10 @@ function DashboardCiudadano({ userName, onStartTramite, onLogout }: {
         <div className="flex items-center gap-8">
           <span className="font-bold text-xl text-black">SIAF</span>
           <nav className="flex gap-1">
-            {["Inicio","Trámites","Pasos Fronterizos","Ayuda"].map((l, i) => (
-              <button key={l} className={`px-3 py-2 text-sm font-semibold rounded-lg ${i === 0 ? "text-black bg-gray-100" : "text-[#44474e] hover:bg-gray-100"}`}>{l}</button>
-            ))}
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-3 py-2 text-sm font-semibold rounded-lg text-black bg-gray-100 hover:bg-gray-200">Inicio</button>
+            <button onClick={() => document.getElementById("servicios-disponibles")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="px-3 py-2 text-sm font-semibold rounded-lg text-[#44474e] hover:bg-gray-100">Trámites</button>
+            <button onClick={() => document.getElementById("pasos-fronterizos")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="px-3 py-2 text-sm font-semibold rounded-lg text-[#44474e] hover:bg-gray-100">Pasos Fronterizos</button>
+            <button onClick={() => setShowHelp(true)} className="px-3 py-2 text-sm font-semibold rounded-lg text-[#44474e] hover:bg-gray-100">Ayuda</button>
           </nav>
         </div>
         <div className="flex items-center gap-4">
@@ -628,7 +734,7 @@ function DashboardCiudadano({ userName, onStartTramite, onLogout }: {
             </h1>
             <p className="text-[#44474e] mt-2">¿Qué trámite desea realizar hoy en el Sistema Integral de Aduanas y Fronteras?</p>
           </div>
-          <button onClick={onStartTramite}
+          <button onClick={() => onStartTramite("vehiculo")}
             className="bg-[#031636] text-white px-8 py-4 rounded-xl font-bold text-base hover:bg-[#0a2a5e] transition-colors flex items-center gap-3 shadow-lg">
             <span className="text-lg">+</span>
             Iniciar Nuevo Trámite
@@ -652,36 +758,29 @@ function DashboardCiudadano({ userName, onStartTramite, onLogout }: {
 
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-8">
-            <h2 className="font-bold text-[#1b1b1e] text-lg mb-4">Servicios Disponibles</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <h2 id="servicios-disponibles" className="font-bold text-[#1b1b1e] text-lg mb-4 scroll-mt-20">Servicios Disponibles</h2>
+            <div className="grid grid-cols-2 gap-4">
               {servicios.map(s => (
-                <button key={s.title} onClick={s.action}
-                  className={`text-left p-5 rounded-xl border-2 transition-all hover:shadow-md
-                    ${s.primary ? "border-[#031636] bg-[#031636] text-white" : "border-[#e2e8f0] bg-white text-[#1b1b1e] hover:border-[#031636]"}`}>
+                <div key={s.title}
+                  className="text-left p-5 rounded-xl border-2 border-[#e2e8f0] bg-white text-[#1b1b1e]">
                   <div className="text-2xl mb-3">{s.icon}</div>
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className={`font-bold text-sm leading-tight ${s.primary ? "text-white" : "text-[#1b1b1e]"}`}>{s.title}</h3>
+                    <h3 className="font-bold text-sm leading-tight text-[#1b1b1e]">{s.title}</h3>
                     <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full shrink-0
-                      ${s.primary ? "bg-white/20 text-white"
-                        : s.badgeColor === "green" ? "bg-[#dcfce7] text-[#166534]"
+                      ${s.badgeColor === "green" ? "bg-[#dcfce7] text-[#166534]"
                         : s.badgeColor === "blue" ? "bg-[#d8e3fa] text-[#5a6578]"
                         : "bg-[#e4e1e5] text-[#44474e]"}`}>
                       {s.badge}
                     </span>
                   </div>
-                  <p className={`text-xs leading-relaxed ${s.primary ? "text-white/70" : "text-[#6b7280]"}`}>{s.desc}</p>
-                  {s.primary && (
-                    <div className="mt-4 flex items-center gap-2 text-white text-xs font-semibold">
-                      Comenzar →
-                    </div>
-                  )}
-                </button>
+                  <p className="text-xs leading-relaxed text-[#6b7280]">{s.desc}</p>
+                </div>
               ))}
             </div>
           </div>
 
           <div className="col-span-4">
-            <h2 className="font-bold text-[#1b1b1e] text-lg mb-4">Estado Pasos Fronterizos</h2>
+            <h2 id="pasos-fronterizos" className="font-bold text-[#1b1b1e] text-lg mb-4 scroll-mt-20">Estado Pasos Fronterizos</h2>
             <div className="bg-white rounded-xl border border-[#e2e8f0] overflow-hidden mb-4">
               {pasos.map((paso, i) => (
                 <div key={paso.nombre} className={`p-4 ${i < pasos.length - 1 ? "border-b border-[#e2e8f0]" : ""}`}>
@@ -736,27 +835,55 @@ function DashboardCiudadano({ userName, onStartTramite, onLogout }: {
           ))}
         </div>
       </footer>
+
+      {/* --- AYUDA DIALOG --- */}
+      {showHelp && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl relative border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <button onClick={() => setShowHelp(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">✕</button>
+            <h3 className="text-2xl font-bold text-[#031636] mb-4 flex items-center gap-2">
+              <span>💡</span> Soporte Ciudadano SIAF
+            </h3>
+            <div className="space-y-4 text-sm text-[#44474e] leading-relaxed">
+              <div>
+                <h4 className="font-bold text-black text-sm">¿Cómo realizo un trámite?</h4>
+                <p className="text-xs text-[#6b7280] mt-1">Selecciona cualquiera de las tarjetas de servicios en tu pantalla principal, rellena los datos requeridos y descarga tu código QR al finalizar.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-black text-sm">¿Es obligatorio registrar mascotas?</h4>
+                <p className="text-xs text-[#6b7280] mt-1">Sí. Todo animal doméstico que cruce la frontera debe estar registrado en el SAG, poseer microchip y certificado zoosanitario vigente.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-black text-sm">Contacto Directo</h4>
+                <p className="text-xs text-[#6b7280] mt-1">Si tienes consultas operacionales en el control fronterizo, llama al <strong>600 570 7040</strong> o acércate a la oficina SAG/Aduanas del paso.</p>
+              </div>
+            </div>
+            <button onClick={() => setShowHelp(false)} className="w-full bg-[#031636] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#0c2a5e] transition-colors mt-6">
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── PROGRESS STEPPER ────────────────────────────────────────────
-function ProgressStepper({ step }: { step: number }) {
-  const steps = ["Conductor","Vehículo","Grupo","Confirmación"];
+function ProgressStepper({ steps, currentStep }: { steps: string[]; currentStep: number }) {
   return (
     <div className="relative flex items-center justify-between max-w-3xl mx-auto w-full">
       <div className="absolute h-0.5 bg-[#c5c6cf] left-[12%] right-[12%] top-5 z-0" />
-      <div className="absolute h-0.5 bg-black left-[12%] top-5 z-0 transition-all"
-        style={{ right: step === 1 ? "63%" : step === 2 ? "38%" : step === 3 ? "13%" : "12%" }} />
+      <div className="absolute h-0.5 bg-black left-[12%] top-5 z-0 transition-all duration-300"
+        style={{ width: `${(currentStep / (steps.length - 1)) * 76}%` }} />
       {steps.map((s, i) => {
-        const active = i + 1 === step, done = i + 1 < step;
+        const active = i === currentStep, done = i < currentStep;
         return (
           <div key={s} className="flex flex-col items-center gap-2 z-10">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base transition-colors
-              ${active ? "bg-black text-white" : done ? "bg-[#7384a9] text-white" : "bg-[#f5f3f7] text-[#44474e]"}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base transition-colors duration-300
+              ${active ? "bg-black text-white" : done ? "bg-[#7384a9] text-white" : "bg-[#f5f3f7] text-[#44474e] border border-[#c5c6cf]"}`}>
               {done ? <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l3.5 3.5L14 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> : i + 1}
             </div>
-            <span className={`text-sm font-semibold ${active || done ? "text-black" : "text-[#44474e]"}`}>{s}</span>
+            <span className={`text-xs font-semibold ${active || done ? "text-black" : "text-[#44474e]"}`}>{s}</span>
           </div>
         );
       })}
@@ -765,9 +892,10 @@ function ProgressStepper({ step }: { step: number }) {
 }
 
 // ─── REGISTRO VEHÍCULO ────────────────────────────────────────────
-function RegistroVehiculoScreen({ onNext, onBack, onLogout, data, setData }: {
+function RegistroVehiculoScreen({ onNext, onBack, onLogout, data, setData, hasPets }: {
   onNext: () => void; onBack: () => void; onLogout: () => void;
   data: VehicleData; setData: (d: VehicleData) => void;
+  hasPets: boolean;
 }) {
   function validate() {
     if (!data.patente.trim()) { toast.error("Ingrese la patente del vehículo"); return; }
@@ -776,6 +904,7 @@ function RegistroVehiculoScreen({ onNext, onBack, onLogout, data, setData }: {
     onNext();
   }
   const countriesList = ["Chile","Argentina","Brasil","Uruguay","Bolivia","Perú","Colombia","Paraguay"];
+  const steps = hasPets ? ["Vehículo", "Grupo", "SAG", "Mascotas", "Mercancías"] : ["Vehículo", "Grupo", "SAG", "Mercancías"];
 
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter,sans-serif", background: "#fbf8fc" }}>
@@ -793,7 +922,7 @@ function RegistroVehiculoScreen({ onNext, onBack, onLogout, data, setData }: {
       </header>
 
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-8 flex flex-col gap-12">
-        <ProgressStepper step={2} />
+        <ProgressStepper steps={steps} currentStep={0} />
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-8 bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_6px_rgba(3,22,54,0.05)] p-8">
             <h1 className="text-2xl font-semibold text-black tracking-tight mb-2">Información del Vehículo</h1>
@@ -905,6 +1034,7 @@ function RegistroGrupoScreen({ onNext, onBack, onLogout, minors, setMinors, hasP
   const [newNombre, setNewNombre] = useState("");
   const [newRut, setNewRut] = useState("");
   const [newEdad, setNewEdad] = useState("");
+  const steps = hasPets ? ["Vehículo", "Grupo", "SAG", "Mascotas", "Mercancías"] : ["Vehículo", "Grupo", "SAG", "Mercancías"];
 
   function addMinor() {
     if (!newNombre.trim() || !newRut.trim() || !newEdad.trim()) { toast.error("Complete todos los campos del menor"); return; }
@@ -935,14 +1065,10 @@ function RegistroGrupoScreen({ onNext, onBack, onLogout, minors, setMinors, hasP
       </header>
 
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-8 flex flex-col gap-8">
+        <ProgressStepper steps={steps} currentStep={1} />
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[#44474e] text-sm">Paso 3 de 5</p>
-            <div className="flex items-center gap-2 mt-1">
-              {[1,2,3,4,5].map(i => (
-                <div key={i} className={`rounded-[4px] h-2 transition-all ${i === 3 ? "w-8 bg-black" : i < 3 ? "w-2 bg-[#7384a9]" : "w-2 bg-[#c5c6cf]"}`} />
-              ))}
-            </div>
+            <p className="text-[#44474e] text-sm">Paso 2 de {steps.length}</p>
             <h1 className="text-[#1b1b1e] text-xl font-normal mt-2">Grupo de Viaje y Menores</h1>
             <p className="text-[#44474e] mt-1 text-sm leading-relaxed max-w-lg">Gestione los integrantes de su grupo familiar y declare menores de edad o mascotas.</p>
           </div>
@@ -1083,7 +1209,7 @@ function RegistroGrupoScreen({ onNext, onBack, onLogout, minors, setMinors, hasP
               </div>
               <div className="mt-6 space-y-3">
                 <button onClick={onNext} className="w-full bg-black text-white py-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors">
-                  Continuar a Mercancías →
+                  Continuar a Declaración SAG →
                 </button>
                 <button onClick={onBack} className="w-full border border-[#75777f] py-3 rounded-lg text-[#44474e] text-sm hover:bg-gray-50 transition-colors">
                   Volver al Paso Anterior
@@ -1115,10 +1241,440 @@ function RegistroGrupoScreen({ onNext, onBack, onLogout, minors, setMinors, hasP
   );
 }
 
+// ─── DECLARACION SAG (RF-04) ──────────────────────────────────────
+function DeclaracionSagScreen({
+  onNext, onBack, onLogout,
+  sagVegetal, setSagVegetal, sagVegetalDetalle, setSagVegetalDetalle,
+  sagAnimal, setSagAnimal, sagAnimalDetalle, setSagAnimalDetalle,
+  hasPets
+}: {
+  onNext: () => void; onBack: () => void; onLogout: () => void;
+  sagVegetal: boolean; setSagVegetal: (v: boolean) => void;
+  sagVegetalDetalle: string; setSagVegetalDetalle: (s: string) => void;
+  sagAnimal: boolean; setSagAnimal: (v: boolean) => void;
+  sagAnimalDetalle: string; setSagAnimalDetalle: (s: string) => void;
+  hasPets: boolean;
+}) {
+  const [signed, setSigned] = useState(false);
+
+  const handleSubmit = () => {
+    if (!signed) {
+      toast.error("Debe aceptar la declaración jurada para continuar");
+      return;
+    }
+    toast.success("Declaración SAG registrada exitosamente");
+    onNext();
+  };
+
+  const steps = hasPets ? ["Vehículo", "Grupo", "SAG", "Mascotas", "Mercancías"] : ["Vehículo", "Grupo", "SAG", "Mercancías"];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
+      <Toaster richColors />
+      <header className="bg-white border-b border-[#c5c6cf] h-16 flex items-center px-10 justify-between shrink-0">
+        <span className="font-black text-xl text-black tracking-tight">SIAF</span>
+        <button onClick={onLogout} className="border border-[#75777f] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-100">Cerrar Sesión</button>
+      </header>
+
+      <main className="flex-1 max-w-[800px] mx-auto w-full px-6 py-8 flex flex-col gap-6">
+        <ProgressStepper steps={steps} currentStep={2} />
+        <div>
+          <p className="text-[#44474e] text-sm font-semibold uppercase tracking-wider">Trámite SAG (RF-04) • Paso 3 de {steps.length}</p>
+          <h1 className="text-3xl font-bold text-[#1b1b1e] tracking-tight mt-1">Declaración Jurada Conjunta SAG-Aduanas</h1>
+          <p className="text-[#44474e] mt-2 text-sm leading-relaxed">Declare de forma anticipada si ingresa productos de origen vegetal, animal o alimentos al país.</p>
+        </div>
+
+        <div className="bg-white rounded-xl border border-[#c5c6cf] p-6 space-y-6">
+          <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-6">
+            <div>
+              <h3 className="font-bold text-base text-[#1b1b1e]">1. Productos de Origen Vegetal</h3>
+              <p className="text-xs text-[#6b7280] mt-1">¿Trae consigo semillas, frutas frescas, flores, tierra o vegetales procesados?</p>
+            </div>
+            <button onClick={() => setSagVegetal(!sagVegetal)}
+              className={`relative inline-flex items-center w-11 h-6 rounded-full transition-colors shrink-0 ${sagVegetal ? "bg-[#031636]" : "bg-[#e4e1e5]"}`}>
+              <span className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-transform ${sagVegetal ? "translate-x-5" : "translate-x-0.5"}`} />
+            </button>
+          </div>
+
+          {sagVegetal && (
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">Especifique qué productos vegetales porta</label>
+              <textarea value={sagVegetalDetalle} onChange={e => setSagVegetalDetalle(e.target.value)} placeholder="Ej: Manzanas (2 kg), semillas de girasol..."
+                className="w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white h-20 resize-none" />
+            </div>
+          )}
+
+          <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-6 pt-2">
+            <div>
+              <h3 className="font-bold text-base text-[#1b1b1e]">2. Productos de Origen Animal o Derivados</h3>
+              <p className="text-xs text-[#6b7280] mt-1">¿Trae embutidos, quesos, carnes frescas o enlatadas, miel, o subproductos animales?</p>
+            </div>
+            <button onClick={() => setSagAnimal(!sagAnimal)}
+              className={`relative inline-flex items-center w-11 h-6 rounded-full transition-colors shrink-0 ${sagAnimal ? "bg-[#031636]" : "bg-[#e4e1e5]"}`}>
+              <span className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-transform ${sagAnimal ? "translate-x-5" : "translate-x-0.5"}`} />
+            </button>
+          </div>
+
+          {sagAnimal && (
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">Especifique qué productos animales porta</label>
+              <textarea value={sagAnimalDetalle} onChange={e => setSagAnimalDetalle(e.target.value)} placeholder="Ej: Queso mantecoso sellado (1 kg), cecinas..."
+                className="w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white h-20 resize-none" />
+            </div>
+          )}
+
+          <div className="bg-[#fdf2f2] border-l-4 border-[#ba1a1a] p-4 text-xs text-[#9b1c1c] rounded-r-lg">
+            <p className="font-bold uppercase tracking-wider mb-1">IMPORTANTE</p>
+            <p className="leading-relaxed">El ocultamiento de productos regulados por el SAG puede conllevar multas severas e incautación de las mercancías de forma inmediata en el paso fronterizo.</p>
+          </div>
+
+          <div className="flex items-start gap-3 pt-4">
+            <input type="checkbox" id="signed-sag" checked={signed} onChange={e => setSigned(e.target.checked)} className="mt-1" />
+            <label htmlFor="signed-sag" className="text-sm text-[#44474e] leading-relaxed">
+              Declaro bajo juramento que toda la información provista en este formulario es verídica y que asumo las responsabilidades legales que de ella emanen.
+            </label>
+          </div>
+        </div>
+
+        <div className="flex gap-4 pt-2">
+          <button onClick={handleSubmit} className="flex-1 bg-[#031636] text-white py-3.5 rounded-lg font-bold hover:bg-[#0c2a5e] transition-colors">
+            {hasPets ? "Continuar a Mascotas →" : "Continuar a Mercancías →"}
+          </button>
+          <button onClick={onBack} className="px-6 border border-[#c5c6cf] text-[#44474e] rounded-lg hover:bg-gray-50 transition-colors">
+            Volver
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ─── REGISTRO DE MASCOTAS ─────────────────────────────────────────
+function RegistroMascotasScreen({
+  onNext, onBack, onLogout, mascotaData, setMascotaData, hasPets
+}: {
+  onNext: () => void; onBack: () => void; onLogout: () => void;
+  mascotaData: { nombre: string; tipo: string; raza: string; microchip: string; certificado: string; origen: string };
+  setMascotaData: (data: any) => void;
+  hasPets: boolean;
+}) {
+  const handleSubmit = () => {
+    if (!mascotaData.nombre.trim() || !mascotaData.microchip.trim() || !mascotaData.certificado.trim()) {
+      toast.error("Complete el nombre, microchip y certificado zoosanitario");
+      return;
+    }
+    toast.success("Mascota registrada correctamente en el SIAF");
+    onNext();
+  };
+  const steps = hasPets ? ["Vehículo", "Grupo", "SAG", "Mascotas", "Mercancías"] : ["Vehículo", "Grupo", "SAG", "Mercancías"];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
+      <Toaster richColors />
+      <header className="bg-white border-b border-[#c5c6cf] h-16 flex items-center px-10 justify-between shrink-0">
+        <span className="font-black text-xl text-black tracking-tight">SIAF</span>
+        <button onClick={onLogout} className="border border-[#75777f] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-100">Cerrar Sesión</button>
+      </header>
+
+      <main className="flex-1 max-w-[800px] mx-auto w-full px-6 py-8 flex flex-col gap-6">
+        <ProgressStepper steps={steps} currentStep={3} />
+        <div>
+          <p className="text-[#44474e] text-sm font-semibold uppercase tracking-wider">Trámite SAG / Mascotas • Paso 4 de {steps.length}</p>
+          <h1 className="text-3xl font-bold text-[#1b1b1e] tracking-tight mt-1">Registro de Tránsito de Mascotas</h1>
+          <p className="text-[#44474e] mt-2 text-sm leading-relaxed">Registre los antecedentes sanitarios y de identificación de la mascota con la que ingresará o saldrá del país.</p>
+        </div>
+
+        <div className="bg-white rounded-xl border border-[#c5c6cf] p-6 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">Nombre de la Mascota *</label>
+              <input value={mascotaData.nombre} onChange={e => setMascotaData({ ...mascotaData, nombre: e.target.value })} placeholder="Ej: Rocky"
+                className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">Tipo de Mascota *</label>
+              <select value={mascotaData.tipo} onChange={e => setMascotaData({ ...mascotaData, tipo: e.target.value })}
+                className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white">
+                <option value="Perro">🐕 Perro</option>
+                <option value="Gato">🐈 Gato</option>
+                <option value="Hurón">🦦 Hurón</option>
+                <option value="Otro">🐾 Otro</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">Raza / Descripción *</label>
+              <input value={mascotaData.raza} onChange={e => setMascotaData({ ...mascotaData, raza: e.target.value })} placeholder="Ej: Golden Retriever"
+                className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">País de Origen / Procedencia</label>
+              <select value={mascotaData.origen} onChange={e => setMascotaData({ ...mascotaData, origen: e.target.value })}
+                className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white">
+                <option value="Argentina">Argentina</option>
+                <option value="Chile">Chile</option>
+                <option value="Perú">Perú</option>
+                <option value="Bolivia">Bolivia</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">Nº de Microchip (15 dígitos) *</label>
+              <input value={mascotaData.microchip} onChange={e => setMascotaData({ ...mascotaData, microchip: e.target.value })} placeholder="981020003004005"
+                className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">Nº de Certificado Sanitario *</label>
+              <input value={mascotaData.certificado} onChange={e => setMascotaData({ ...mascotaData, certificado: e.target.value })} placeholder="CERT-2024-88A"
+                className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white" />
+            </div>
+          </div>
+
+          <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg p-4 text-xs text-[#166534] flex gap-2">
+            <span>ℹ️</span>
+            <div>
+              <p className="font-semibold">Requisitos del Control Fronterizo</p>
+              <p className="mt-0.5 leading-relaxed">Su mascota debe tener la vacuna antirrábica vigente (aplicada al menos 21 días antes del viaje) y estar en buenas condiciones generales de salud al momento de la fiscalización.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4 pt-2">
+          <button onClick={handleSubmit} className="flex-1 bg-[#031636] text-white py-3.5 rounded-lg font-bold hover:bg-[#0c2a5e] transition-colors">
+            Registrar Mascota →
+          </button>
+          <button onClick={onBack} className="px-6 border border-[#c5c6cf] text-[#44474e] rounded-lg hover:bg-gray-50 transition-colors">
+            Volver
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ─── DECLARACION DE MERCANCIAS (RF-05) ────────────────────────────
+function DeclaracionMercanciasScreen({
+  onNext, onBack, onLogout, mercancias, setMercancias, hasPets
+}: {
+  onNext: () => void; onBack: () => void; onLogout: () => void;
+  mercancias: { id: string; descripcion: string; cantidad: number; valor: number }[];
+  setMercancias: (m: any[]) => void;
+  hasPets: boolean;
+}) {
+  const [desc, setDesc] = useState("");
+  const [cant, setCant] = useState(1);
+  const [val, setVal] = useState(0);
+
+  const addItem = () => {
+    if (!desc.trim() || cant <= 0 || val <= 0) {
+      toast.error("Indique una descripción, cantidad y valor válidos");
+      return;
+    }
+    setMercancias([...mercancias, { id: Date.now().toString(), descripcion: desc, cantidad: cant, valor: val }]);
+    setDesc("");
+    setCant(1);
+    setVal(0);
+    toast.success("Artículo agregado");
+  };
+
+  const removeItem = (id: string) => {
+    setMercancias(mercancias.filter(item => item.id !== id));
+    toast.info("Artículo removido");
+  };
+
+  const totalUSD = mercancias.reduce((acc, item) => acc + (item.valor * item.cantidad), 0);
+  const franchiseLimit = 500;
+  const paysTaxes = totalUSD > franchiseLimit;
+
+  const handleSubmit = () => {
+    toast.success("Declaración de mercancías guardada correctamente");
+    onNext();
+  };
+  const steps = hasPets ? ["Vehículo", "Grupo", "SAG", "Mascotas", "Mercancías"] : ["Vehículo", "Grupo", "SAG", "Mercancías"];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
+      <Toaster richColors />
+      <header className="bg-white border-b border-[#c5c6cf] h-16 flex items-center px-10 justify-between shrink-0">
+        <span className="font-black text-xl text-black tracking-tight">SIAF</span>
+        <button onClick={onLogout} className="border border-[#75777f] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-100">Cerrar Sesión</button>
+      </header>
+
+      <main className="flex-1 max-w-[900px] mx-auto w-full px-6 py-8 flex flex-col gap-6">
+        <ProgressStepper steps={steps} currentStep={hasPets ? 4 : 3} />
+        <div>
+          <p className="text-[#44474e] text-sm font-semibold uppercase tracking-wider">Trámite Aduanero (RF-05) • Paso {hasPets ? 5 : 4} de {steps.length}</p>
+          <h1 className="text-3xl font-bold text-[#1b1b1e] tracking-tight mt-1">Declaración de Mercancías y Equipaje</h1>
+          <p className="text-[#44474e] mt-2 text-sm leading-relaxed">Declare equipaje acompañado, artículos comerciales, obsequios o dinero en efectivo sobre el límite permitido.</p>
+        </div>
+
+        <div className="grid grid-cols-12 gap-6">
+          <div className="col-span-8 space-y-6">
+            <div className="bg-white rounded-xl border border-[#c5c6cf] p-6 space-y-4">
+              <h3 className="font-bold text-sm text-[#1b1b1e]">Agregar Artículo a la Declaración</h3>
+              <div className="grid grid-cols-12 gap-3">
+                <div className="col-span-6">
+                  <label className="text-xs font-bold text-[#44474e]">Descripción del Artículo</label>
+                  <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Ej: PlayStation 5 Slim"
+                    className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white" />
+                </div>
+                <div className="col-span-3">
+                  <label className="text-xs font-bold text-[#44474e]">Cant.</label>
+                  <input type="number" min="1" value={cant} onChange={e => setCant(parseInt(e.target.value) || 1)}
+                    className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white" />
+                </div>
+                <div className="col-span-3">
+                  <label className="text-xs font-bold text-[#44474e]">Valor Unit. (USD)</label>
+                  <input type="number" min="0" value={val} onChange={e => setVal(parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm outline-none focus:border-black bg-white" />
+                </div>
+              </div>
+              <button onClick={addItem} className="w-full bg-[#031636] text-white py-2 rounded-lg font-semibold text-xs hover:bg-[#0c2a5e] transition-colors">
+                + Agregar a la Lista
+              </button>
+            </div>
+
+            <div className="bg-white rounded-xl border border-[#c5c6cf] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <h3 className="font-bold text-sm text-[#1b1b1e]">Detalle de Artículos Declarados</h3>
+              </div>
+              {mercancias.length === 0 ? (
+                <div className="p-12 text-center text-[#6b7280] text-sm">
+                  No ha declarado artículos. Si no lleva mercancías sobre la franquicia, puede continuar.
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {mercancias.map(item => (
+                    <div key={item.id} className="p-4 flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-sm text-[#1b1b1e]">{item.descripcion}</p>
+                        <p className="text-xs text-[#6b7280]">Cantidad: {item.cantidad} • Valor Unitario: USD {item.valor}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-semibold text-sm text-black">Total: USD {item.cantidad * item.valor}</span>
+                        <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-red-500 text-sm">✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="col-span-4">
+            <div className="bg-white rounded-xl border border-[#c5c6cf] p-6 space-y-4">
+              <h4 className="font-bold text-[#1b1b1e] text-xs uppercase tracking-[0.8px]">Resumen de Franquicia</h4>
+              <div className="space-y-2 border-b border-gray-100 pb-4">
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Límite Exento:</span>
+                  <span>USD 500</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Monto Declarado:</span>
+                  <span className="font-bold text-[#1b1b1e]">USD {totalUSD}</span>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <p className="text-xs font-bold text-gray-500">Estado de Impuestos:</p>
+                {paysTaxes ? (
+                  <div className="mt-2 bg-[#fdf2f2] border border-[#fde8e8] rounded-lg p-3 text-xs text-[#9b1c1c] leading-relaxed">
+                    <p className="font-bold">Sujeto al pago de impuestos</p>
+                    <p className="mt-1">Excede la franquicia por <strong>USD {totalUSD - franchiseLimit}</strong>. Deberá pagar arancel aduanero del 19% de IVA en frontera.</p>
+                  </div>
+                ) : (
+                  <div className="mt-2 bg-[#f3faf7] border border-[#def7ec] rounded-lg p-3 text-xs text-[#03543f] leading-relaxed">
+                    <p className="font-bold">✓ Exento de aranceles</p>
+                    <p className="mt-1">Su declaración se encuentra dentro del rango de franquicia de viajero (USD 500).</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4 pt-2">
+          <button onClick={handleSubmit} className="flex-1 bg-[#031636] text-white py-3.5 rounded-lg font-bold hover:bg-[#0c2a5e] transition-colors">
+            Enviar Declaración Aduanera →
+          </button>
+          <button onClick={onBack} className="px-6 border border-[#c5c6cf] text-[#44474e] rounded-lg hover:bg-gray-50 transition-colors">
+            Volver
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 // ─── COMPROBANTE ──────────────────────────────────────────────────
-function ComprobanteScreen({ onHome, vehicle }: { onHome: () => void; vehicle: VehicleData }) {
-  const folio = "#4501-A2B-X9";
+function ComprobanteScreen({
+  onHome, tipoTramite, vehicle, hasPets, sagData, mascotaData, mercancias, minors
+}: {
+  onHome: () => void;
+  tipoTramite: "vehiculo" | "sag" | "mascotas" | "mercancias";
+  vehicle: VehicleData;
+  hasPets: boolean;
+  sagData: { sagVegetal: boolean; sagVegetalDetalle: string; sagAnimal: boolean; sagAnimalDetalle: string };
+  mascotaData: { nombre: string; tipo: string; raza: string; microchip: string; certificado: string; origen: string };
+  mercancias: { id: string; descripcion: string; cantidad: number; valor: number }[];
+  minors: Minor[];
+}) {
+  const folio = "#4501-A" + Math.floor(Math.random() * 900 + 100) + "-X9";
   const fecha = new Date().toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  let title = "Salida Temporal de Vehículo";
+  let fields: { label: string; value: string }[] = [];
+
+  if (tipoTramite === "vehiculo") {
+    title = "Comprobante Integrado de Tránsito SIAF";
+    const totalUSD = mercancias.reduce((acc, item) => acc + (item.valor * item.cantidad), 0);
+    const vegStr = sagData.sagVegetal ? "Sí: " + (sagData.sagVegetalDetalle || "Vegetales") : "No";
+    const animStr = sagData.sagAnimal ? "Sí: " + (sagData.sagAnimalDetalle || "Derivados animales") : "No";
+    const petStr = hasPets ? `${mascotaData.nombre || "Rocky"} (${mascotaData.tipo || "Perro"}) - Chip: ${mascotaData.microchip || "981020003004005"}` : "Sin mascotas";
+    const mercStr = mercancias.length > 0 ? `${mercancias.length} art. (Total USD ${totalUSD})` : "Sin mercancías sobre franquicia";
+    fields = [
+      { label: "Vehículo / Patente", value: `${vehicle.marca || "Suzuki"} ${vehicle.modelo || "Swift"} | Patente: ${vehicle.patente || "KJ-LH-42"}` },
+      { label: "Grupo de Viaje", value: `1 Titular + ${minors.length} menor(es)` },
+      { label: "Declaración SAG Vegetal", value: vegStr },
+      { label: "Declaración SAG Animal", value: animStr },
+      { label: "Registro de Mascotas", value: petStr },
+      { label: "Declaración Aduanas (Mercancías)", value: mercStr },
+      { label: "Pago Aranceles", value: totalUSD > 500 ? `Requerido (19% IVA s/ exc.: USD ${Math.round((totalUSD - 500) * 0.19)})` : "Exento (Bajo franquicia)" },
+      { label: "Paso Fronterizo & Vigencia", value: "Los Libertadores | Vigencia: 180 días" }
+    ];
+  } else if (tipoTramite === "sag") {
+    title = "Declaración Jurada SAG-Aduanas (RF-04)";
+    const vegStr = sagData.sagVegetal ? "Sí: " + (sagData.sagVegetalDetalle || "Vegetales") : "No";
+    const animStr = sagData.sagAnimal ? "Sí: " + (sagData.sagAnimalDetalle || "Derivados animales") : "No";
+    fields = [
+      { label: "Productos Vegetales", value: vegStr },
+      { label: "Productos Animales", value: animStr },
+      { label: "Declarante", value: "Juan Pérez" },
+      { label: "Estado Declaración", value: "Aprobada por IA / Sujeta a revisión" }
+    ];
+  } else if (tipoTramite === "mascotas") {
+    title = "Registro Sanitario de Mascotas (SAG)";
+    fields = [
+      { label: "Nombre Mascota", value: `${mascotaData.nombre || "Rocky"} (${mascotaData.tipo || "Perro"})` },
+      { label: "Nº Microchip / Chip ID", value: mascotaData.microchip || "981020003004005" },
+      { label: "Certificado Sanitario", value: mascotaData.certificado || "CERT-2024-88A" },
+      { label: "Procedencia", value: mascotaData.origen || "Argentina" }
+    ];
+  } else if (tipoTramite === "mercancias") {
+    title = "Declaración de Mercancías y Equipaje (RF-05)";
+    const totalUSD = mercancias.reduce((acc, item) => acc + (item.valor * item.cantidad), 0);
+    fields = [
+      { label: "Artículos Declarados", value: mercancias.length > 0 ? `${mercancias.length} artículos` : "Ninguno" },
+      { label: "Valor Total Declarado", value: `USD ${totalUSD}` },
+      { label: "Franquicia Utilizada", value: `USD ${Math.min(totalUSD, 500)} / USD 500` },
+      { label: "Pago Aranceles", value: totalUSD > 500 ? `Requerido (19% s/ excedent: USD ${Math.round((totalUSD - 500) * 0.19)})` : "Exento (Bajo franquicia)" }
+    ];
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter,sans-serif", background: "#fbf8fc" }}>
@@ -1154,22 +1710,12 @@ function ComprobanteScreen({ onHome, vehicle }: { onHome: () => void; vehicle: V
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 p-4">
-                <div>
-                  <p className="text-[#545f72] font-semibold text-sm">Trámite</p>
-                  <p className="font-semibold text-[#1b1b1e] text-base">Salida Temporal de Vehículo</p>
-                </div>
-                <div>
-                  <p className="text-[#545f72] font-semibold text-sm">Patente / Dominio</p>
-                  <p className="font-semibold text-base text-black">{vehicle.patente || "KJ-LH-42"}</p>
-                </div>
-                <div>
-                  <p className="text-[#545f72] font-semibold text-sm">Paso Fronterizo</p>
-                  <p className="font-semibold text-[#1b1b1e] text-base">Los Libertadores (Cristo Redentor)</p>
-                </div>
-                <div>
-                  <p className="text-[#545f72] font-semibold text-sm">Vigencia</p>
-                  <p className="font-semibold text-[#1b1b1e] text-base">Hasta {new Date(Date.now() + 6 * 30 * 24 * 3600 * 1000).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                </div>
+                {fields.map(f => (
+                  <div key={f.label}>
+                    <p className="text-[#545f72] font-semibold text-xs uppercase tracking-[0.3px]">{f.label}</p>
+                    <p className="font-semibold text-[#1b1b1e] text-sm mt-0.5 leading-snug">{f.value}</p>
+                  </div>
+                ))}
               </div>
               <div className="mx-1 mb-4 bg-[#eae7eb] border-l-4 border-black rounded-lg px-3 py-2 flex gap-2 items-start">
                 <span className="shrink-0 text-base">ℹ️</span>
@@ -1706,6 +2252,15 @@ export default function App() {
   const [hasPets, setHasPets] = useState(false);
   const [inspectPatente, setInspectPatente] = useState("");
 
+  // Nuevos estados para los trámites extendidos
+  const [tipoTramite, setTipoTramite] = useState<"vehiculo" | "sag" | "mascotas" | "mercancias">("vehiculo");
+  const [sagVegetal, setSagVegetal] = useState(false);
+  const [sagVegetalDetalle, setSagVegetalDetalle] = useState("");
+  const [sagAnimal, setSagAnimal] = useState(false);
+  const [sagAnimalDetalle, setSagAnimalDetalle] = useState("");
+  const [mascotaData, setMascotaData] = useState({ nombre: "", tipo: "Perro", raza: "", microchip: "", certificado: "", origen: "Argentina" });
+  const [mercancias, setMercancias] = useState<{ id: string; descripcion: string; cantidad: number; valor: number }[]>([]);
+
   function handleLogin(type: UserType, rut: string) {
     setUserType(type);
     setUserName(rut === "12.345.678-9" ? "Juan Pérez" : rut);
@@ -1735,7 +2290,14 @@ export default function App() {
       {view === "dashboard" && (
         <DashboardCiudadano
           userName={userName}
-          onStartTramite={() => setView("vehiculo")}
+          onStartTramite={(targetView) => {
+            setTipoTramite(
+              targetView === "vehiculo" ? "vehiculo" :
+              targetView === "declaracion-sag" ? "sag" :
+              targetView === "registro-mascotas" ? "mascotas" : "mercancias"
+            );
+            setView(targetView);
+          }}
           onLogout={() => setView("login")}
         />
       )}
@@ -1746,11 +2308,12 @@ export default function App() {
           onLogout={() => setView("login")}
           data={vehicle}
           setData={setVehicle}
+          hasPets={hasPets}
         />
       )}
       {view === "grupo" && (
         <RegistroGrupoScreen
-          onNext={() => setView("comprobante")}
+          onNext={() => setView("declaracion-sag")}
           onBack={() => setView("vehiculo")}
           onLogout={() => setView("login")}
           minors={minors}
@@ -1759,8 +2322,53 @@ export default function App() {
           setHasPets={setHasPets}
         />
       )}
+      {view === "declaracion-sag" && (
+        <DeclaracionSagScreen
+          onNext={() => setView(hasPets ? "registro-mascotas" : "declaracion-mercancias")}
+          onBack={() => setView("grupo")}
+          onLogout={() => setView("login")}
+          sagVegetal={sagVegetal}
+          setSagVegetal={setSagVegetal}
+          sagVegetalDetalle={sagVegetalDetalle}
+          setSagVegetalDetalle={setSagVegetalDetalle}
+          sagAnimal={sagAnimal}
+          setSagAnimal={setSagAnimal}
+          sagAnimalDetalle={sagAnimalDetalle}
+          setSagAnimalDetalle={setSagAnimalDetalle}
+          hasPets={hasPets}
+        />
+      )}
+      {view === "registro-mascotas" && (
+        <RegistroMascotasScreen
+          onNext={() => setView("declaracion-mercancias")}
+          onBack={() => setView("declaracion-sag")}
+          onLogout={() => setView("login")}
+          mascotaData={mascotaData}
+          setMascotaData={setMascotaData}
+          hasPets={hasPets}
+        />
+      )}
+      {view === "declaracion-mercancias" && (
+        <DeclaracionMercanciasScreen
+          onNext={() => setView("comprobante")}
+          onBack={() => setView(hasPets ? "registro-mascotas" : "declaracion-sag")}
+          onLogout={() => setView("login")}
+          mercancias={mercancias}
+          setMercancias={setMercancias}
+          hasPets={hasPets}
+        />
+      )}
       {view === "comprobante" && (
-        <ComprobanteScreen onHome={() => setView("dashboard")} vehicle={vehicle} />
+        <ComprobanteScreen
+          onHome={() => setView("dashboard")}
+          tipoTramite={tipoTramite}
+          vehicle={vehicle}
+          hasPets={hasPets}
+          sagData={{ sagVegetal, sagVegetalDetalle, sagAnimal, sagAnimalDetalle }}
+          mascotaData={mascotaData}
+          mercancias={mercancias}
+          minors={minors}
+        />
       )}
       {view === "panel" && (
         <PanelControlScreen
