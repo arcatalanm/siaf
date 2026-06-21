@@ -2261,6 +2261,23 @@ export default function App() {
   const [mascotaData, setMascotaData] = useState({ nombre: "", tipo: "Perro", raza: "", microchip: "", certificado: "", origen: "Argentina" });
   const [mercancias, setMercancias] = useState<{ id: string; descripcion: string; cantidad: number; valor: number }[]>([]);
 
+  useEffect(() => {
+    (window as any).setSiafView = setView;
+    (window as any).setSiafUserType = setUserType;
+    (window as any).setSiafHasPets = setHasPets;
+    (window as any).setSiafTipoTramite = setTipoTramite;
+    (window as any).setSiafVehicle = setVehicle;
+    (window as any).setSiafMinors = setMinors;
+    (window as any).setSiafMascotaData = setMascotaData;
+    (window as any).setSiafMercancias = setMercancias;
+    (window as any).setSiafSagData = (vegetal: boolean, vegDet: string, animal: boolean, animDet: string) => {
+      setSagVegetal(vegetal);
+      setSagVegetalDetalle(vegDet || "");
+      setSagAnimal(animal);
+      setSagAnimalDetalle(animDet || "");
+    };
+  }, []);
+
   function handleLogin(type: UserType, rut: string) {
     setUserType(type);
     setUserName(rut === "12.345.678-9" ? "Juan Pérez" : rut);
