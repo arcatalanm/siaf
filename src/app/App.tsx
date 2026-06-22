@@ -23,7 +23,9 @@ type View =
   | "auditoria"
   | "declaracion-sag"
   | "registro-mascotas"
-  | "declaracion-mercancias";
+  | "declaracion-mercancias"
+  | "usuarios"
+  | "reportes";
 
 type UserType = "ciudadano" | "funcionario";
 
@@ -70,10 +72,11 @@ function RiskBars({ level }: { level: 1 | 2 | 3 }) {
 
 // Shared officer navigation bar
 function OfficerHeader({
-  active, onPanel, onAuditoria, onLogout,
+  active, onNavigate, onLogout,
 }: {
-  active: "panel" | "inspeccion" | "auditoria";
-  onPanel: () => void; onAuditoria: () => void; onLogout: () => void;
+  active: View;
+  onNavigate: (view: View) => void;
+  onLogout: () => void;
 }) {
   return (
     <header className="bg-white border-b border-[#c5c6cf] h-16 flex items-center justify-between px-10 z-20 shrink-0 sticky top-0">
@@ -81,8 +84,10 @@ function OfficerHeader({
         <span className="font-black text-xl text-black tracking-tight">SIAF</span>
         <nav className="flex items-center gap-1">
           {[
-            { key: "panel",     label: "Panel Control",   onClick: onPanel },
-            { key: "auditoria", label: "Auditoría / Logs", onClick: onAuditoria },
+            { key: "panel",     label: "Panel Control",    onClick: () => onNavigate("panel") },
+            { key: "usuarios",  label: "Gestión Usuarios", onClick: () => onNavigate("usuarios") },
+            { key: "reportes",  label: "Reportes",         onClick: () => onNavigate("reportes") },
+            { key: "auditoria", label: "Auditoría / Logs",  onClick: () => onNavigate("auditoria") },
           ].map(item => (
             <button key={item.key} onClick={item.onClick}
               className={`px-4 py-2 text-sm font-semibold transition-colors
@@ -1791,9 +1796,10 @@ const TRANSIT_DATA = [
   { id: "6", time: "10:30:05", patente: "XR-44-PQ", folio: "FOL: 99887766-C", qr: "CADUCADO" as const, risk: 3 as const },
 ];
 
-function PanelControlScreen({ onInspect, onAuditoria, onLogout }: {
-  onInspect: (id: string, patente: string) => void; onAuditoria: () => void; onLogout: () => void;
+function PanelControlScreen({ onInspect, onNavigate, onLogout }: {
+  onInspect: (id: string, patente: string) => void; onNavigate: (view: View) => void; onLogout: () => void;
 }) {
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [search, setSearch] = useState("");
   const filtered = TRANSIT_DATA.filter(r =>
     r.patente.toLowerCase().includes(search.toLowerCase()) || r.folio.toLowerCase().includes(search.toLowerCase())
@@ -1803,7 +1809,7 @@ function PanelControlScreen({ onInspect, onAuditoria, onLogout }: {
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter,sans-serif" }}>
       <Toaster richColors />
-      <OfficerHeader active="panel" onPanel={() => {}} onAuditoria={onAuditoria} onLogout={onLogout} />
+      <OfficerHeader active="panel" onNavigate={onNavigate} onLogout={onLogout} />
 
       <main className="flex-1 px-10 py-6 flex flex-col gap-6 bg-[#fbf8fc]">
         <div className="flex items-center gap-4">
@@ -1849,7 +1855,7 @@ function PanelControlScreen({ onInspect, onAuditoria, onLogout }: {
                 <p className="text-sm text-[#44474e]">Últimos 50 movimientos registrados</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => toast.success("Exportando CSV...")} className="border border-[#75777f] text-sm px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50">Exportar CSV</button>
+                <button onClick={() => setIsExportOpen(true)} className="border border-[#75777f] text-sm px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50">Exportar</button>
                 <button className="bg-black text-white text-sm px-3 py-1.5 rounded-lg hover:bg-gray-800">Filtros</button>
               </div>
             </div>
@@ -1913,13 +1919,17 @@ function PanelControlScreen({ onInspect, onAuditoria, onLogout }: {
           </div>
         </div>
       </main>
+      <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} onConfirm={(fmt) => {
+        setIsExportOpen(false);
+        toast.success(`Archivo de tránsitos exportado en formato ${fmt.toUpperCase()} con éxito.`);
+      }} />
     </div>
   );
 }
 
 // ─── INSPECCIÓN ───────────────────────────────────────────────────
-function InspeccionScreen({ patente, onBack, onAuditoria, onLogout }: {
-  patente: string; onBack: () => void; onAuditoria: () => void; onLogout: () => void;
+function InspeccionScreen({ patente, onBack, onNavigate, onLogout }: {
+  patente: string; onBack: () => void; onNavigate: (view: View) => void; onLogout: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<"vehiculo" | "acompanantes" | "sag" | "pdi">("vehiculo");
   const [result, setResult] = useState<"pending" | "aprobado" | "retenido" | "derivado">("pending");
@@ -1940,7 +1950,7 @@ function InspeccionScreen({ patente, onBack, onAuditoria, onLogout }: {
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
       <Toaster richColors />
-      <OfficerHeader active="inspeccion" onPanel={onBack} onAuditoria={onAuditoria} onLogout={onLogout} />
+      <OfficerHeader active="inspeccion" onNavigate={onNavigate} onLogout={onLogout} />
 
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-6 flex flex-col gap-6">
         <div className="flex items-end justify-between">
@@ -2129,13 +2139,14 @@ const AUDIT_ROWS = [
   { ts: "2023-10-27\n14:05:44.221", user: "k_morales_adm", module: "RF-15 Fronteras", action: "Cierre de turno - Paso Los Libertadores", ip: "10.0.2.45", result: "APROBADO" as const },
 ];
 
-function AuditoriaScreen({ onPanel, onLogout }: { onPanel: () => void; onLogout: () => void }) {
+function AuditoriaScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => void; onLogout: () => void }) {
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const resultColor = { "APROBADO": "green", "BLOQUEADO": "red", "ALERTA": "orange" } as const;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
       <Toaster richColors />
-      <OfficerHeader active="auditoria" onPanel={onPanel} onAuditoria={() => {}} onLogout={onLogout} />
+      <OfficerHeader active="auditoria" onNavigate={onNavigate} onLogout={onLogout} />
 
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-8 flex flex-col gap-6">
         <div className="flex items-end justify-between">
@@ -2148,7 +2159,7 @@ function AuditoriaScreen({ onPanel, onLogout }: { onPanel: () => void; onLogout:
               className="bg-[#e4e1e5] border border-[#c5c6cf] px-5 py-2.5 rounded-lg flex items-center gap-2 text-[#1b1b1e] text-sm hover:bg-[#d4d1d5] transition-colors">
               ⚙ Filtros Avanzados
             </button>
-            <button onClick={() => toast.success("Exportando reporte PDF...")}
+            <button onClick={() => setIsExportOpen(true)}
               className="bg-black text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm shadow-sm hover:bg-gray-800 transition-colors">
               📄 Exportar Reporte
             </button>
@@ -2238,6 +2249,432 @@ function AuditoriaScreen({ onPanel, onLogout }: { onPanel: () => void; onLogout:
           </div>
         </div>
       </main>
+      <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} onConfirm={(fmt) => {
+        setIsExportOpen(false);
+        toast.success(`Reporte de auditoría exportado en formato ${fmt.toUpperCase()} con éxito.`);
+      }} />
+    </div>
+  );
+}
+
+// ─── EXPORT MODAL ─────────────────────────────────────────────────
+function ExportModal({ isOpen, onClose, onConfirm }: { isOpen: boolean; onClose: () => void; onConfirm: (format: string) => void }) {
+  const [selectedFormat, setSelectedFormat] = useState("pdf");
+  const [isExporting, setIsExporting] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsExporting(false);
+      setProgress(0);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  function handleConfirm() {
+    setIsExporting(true);
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress(p => {
+        if (p >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsExporting(false);
+            onConfirm(selectedFormat);
+          }, 300);
+          return 100;
+        }
+        return p + 20;
+      });
+    }, 150);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] backdrop-blur-sm">
+      <div className="bg-white rounded-xl max-w-md w-full p-6 border border-[#c5c6cf] shadow-xl flex flex-col gap-4 animate-in fade-in zoom-in duration-200">
+        <h3 className="font-semibold text-lg text-black">Exportar Datos</h3>
+        {!isExporting ? (
+          <>
+            <p className="text-sm text-[#44474e]">Seleccione el formato en el cual desea exportar y descargar el listado o reporte actual.</p>
+            <div className="flex flex-col gap-2.5">
+              {[
+                { id: "excel", title: "Microsoft Excel (.xlsx)", desc: "Ideal para análisis de datos y hojas de cálculo." },
+                { id: "csv", title: "Valores separados por comas (.csv)", desc: "Ideal para importar a otros sistemas." },
+                { id: "pdf", title: "Documento PDF (.pdf)", desc: "Ideal para impresión y visualización limpia." },
+              ].map(f => (
+                <label key={f.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors
+                  ${selectedFormat === f.id ? "border-black bg-gray-50" : "border-[#c5c6cf] hover:border-gray-300"}`}>
+                  <input type="radio" name="export-format" checked={selectedFormat === f.id} onChange={() => setSelectedFormat(f.id)} className="mt-1" />
+                  <div>
+                    <p className="text-sm font-bold text-black">{f.title}</p>
+                    <p className="text-xs text-[#44474e]">{f.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <button onClick={onClose} className="px-4 py-2 border border-[#c5c6cf] rounded-lg text-sm text-[#44474e] hover:bg-gray-50">Cancelar</button>
+              <button onClick={handleConfirm} className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800">Confirmar Exportación</button>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-6 gap-4">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin" />
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+              <div className="bg-black h-full rounded-full transition-all duration-150" style={{ width: `${progress}%` }} />
+            </div>
+            <p className="text-sm font-semibold text-[#44474e]">Generando archivo... {progress}%</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── GESTIÓN DE USUARIOS ──────────────────────────────────────────
+type SiafUser = {
+  id: string;
+  name: string;
+  rut: string;
+  email: string;
+  role: string;
+  status: string;
+};
+
+function UsuariosScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => void; onLogout: () => void }) {
+  const [users, setUsers] = useState<SiafUser[]>([
+    { id: "1", name: "Ariel Catalán", rut: "12.345.678-9", email: "ariel.catalan@siaf.cl", role: "Ciudadano", status: "Activo" },
+    { id: "2", name: "Vicente Orellana", rut: "18.765.432-1", email: "v.orellana@aduana.cl", role: "Funcionario", status: "Activo" },
+    { id: "3", name: "Diego Rebaza", rut: "15.987.654-3", email: "d.rebaza@pdi.cl", role: "Funcionario", status: "Activo" },
+    { id: "4", name: "Joshua Reyes", rut: "16.321.654-K", email: "j.reyes@sag.cl", role: "Funcionario", status: "Inactivo" },
+    { id: "5", name: "Cindy Contador", rut: "11.222.333-4", email: "cindy.contador@siaf.cl", role: "Administrador", status: "Activo" },
+  ]);
+  const [search, setSearch] = useState("");
+  const [editingUser, setEditingUser] = useState<SiafUser | null>(null);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+
+  // Edit user form fields:
+  const [editName, setEditName] = useState("");
+  const [editRut, setEditRut] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+
+  const filtered = users.filter(u =>
+    u.name.toLowerCase().includes(search.toLowerCase()) ||
+    u.rut.toLowerCase().includes(search.toLowerCase()) ||
+    u.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  function startEdit(u: SiafUser) {
+    setEditingUser(u);
+    setEditName(u.name);
+    setEditRut(u.rut);
+    setEditEmail(u.email);
+    setEditRole(u.role);
+    setEditStatus(u.status);
+  }
+
+  function handleUpdate() {
+    if (!editName.trim() || !editRut.trim() || !editEmail.trim()) {
+      toast.error("Por favor complete todos los campos obligatorios.");
+      return;
+    }
+    if (!editingUser) return;
+    setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, name: editName, rut: editRut, email: editEmail, role: editRole, status: editStatus } : u));
+    setEditingUser(null);
+    toast.success("Usuario actualizado correctamente.");
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
+      <Toaster richColors />
+      <OfficerHeader active="usuarios" onNavigate={onNavigate} onLogout={onLogout} />
+
+      <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-8 flex flex-col gap-6">
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="font-semibold text-3xl text-black tracking-tight">Gestión de Usuarios</h1>
+            <p className="text-[#545f72] text-base mt-1">Administración de credenciales, roles y accesos institucionales.</p>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setIsExportOpen(true)}
+              className="bg-black text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border-none">
+              📥 Exportar Listado
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-[#c5c6cf] shadow-sm">
+          <div className="relative max-w-sm flex-1">
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar por nombre, RUT o correo..."
+              className="w-full bg-white border border-[#c5c6cf] rounded-full pl-10 pr-4 py-2.5 text-sm text-[#44474e] outline-none focus:border-[#031636] transition-colors" />
+            <svg className="absolute left-3.5 top-3.5" width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M5.5 10a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM11 11l-2-2" stroke="#44474E" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+          {search && <p className="text-sm text-[#44474e]">{filtered.length} usuario{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}</p>}
+        </div>
+
+        <div className="bg-white rounded-xl border border-[#c5c6cf] shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#f0edf1]">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#44474e] uppercase tracking-[0.6px] border-b border-[#c5c6cf]">NOMBRE</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#44474e] uppercase tracking-[0.6px] border-b border-[#c5c6cf]">RUT</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#44474e] uppercase tracking-[0.6px] border-b border-[#c5c6cf]">CORREO ELECTRÓNICO</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#44474e] uppercase tracking-[0.6px] border-b border-[#c5c6cf]">ROL / PERFIL</th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-[#44474e] uppercase tracking-[0.6px] border-b border-[#c5c6cf]">ESTADO</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-[#44474e] uppercase tracking-[0.6px] border-b border-[#c5c6cf]">ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(u => (
+                  <tr key={u.id} className="border-t border-[#c5c6cf] hover:bg-[#fafafa] transition-colors">
+                    <td className="px-6 py-4 font-bold text-[#1b1b1e] text-sm">{u.name}</td>
+                    <td className="px-6 py-4 text-sm text-[#545f72] font-mono">{u.rut}</td>
+                    <td className="px-6 py-4 text-sm text-[#545f72]">{u.email}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2.5 py-1 text-xs font-bold rounded-full
+                        ${u.role === "Administrador" ? "bg-purple-100 text-purple-800" : u.role === "Funcionario" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
+                        ${u.status === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${u.status === "Activo" ? "bg-green-600" : "bg-red-600"}`} />
+                        {u.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => startEdit(u)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-[#c5c6cf] rounded-md text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        ✏️ Editar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-gray-500">No se encontraron usuarios que coincidan con la búsqueda.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[90] backdrop-blur-sm">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 border border-[#c5c6cf] shadow-xl flex flex-col gap-4 animate-in fade-in zoom-in duration-200">
+            <h3 className="font-semibold text-lg text-black">Editar Perfil de Usuario</h3>
+            <div className="flex flex-col gap-3.5">
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Nombre Completo *</label>
+                <input value={editName} onChange={e => setEditName(e.target.value)}
+                  className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">RUT *</label>
+                <input value={editRut} onChange={e => setEditRut(e.target.value)}
+                  className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black font-mono" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Correo Electrónico *</label>
+                <input value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email"
+                  className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-gray-700 block mb-1">Rol / Perfil</label>
+                  <select value={editRole} onChange={e => setEditRole(e.target.value)}
+                    className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black">
+                    <option value="Ciudadano">Ciudadano</option>
+                    <option value="Funcionario">Funcionario</option>
+                    <option value="Administrador">Administrador</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-700 block mb-1">Estado</label>
+                  <select value={editStatus} onChange={e => setEditStatus(e.target.value)}
+                    className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black">
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <button onClick={() => setEditingUser(null)}
+                className="px-4 py-2 border border-[#c5c6cf] rounded-lg text-sm text-[#44474e] hover:bg-gray-50">Cancelar</button>
+              <button onClick={handleUpdate}
+                className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800">Actualizar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} onConfirm={(fmt) => {
+        setIsExportOpen(false);
+        toast.success(`Listado de usuarios exportado en formato ${fmt.toUpperCase()} con éxito.`);
+      }} />
+    </div>
+  );
+}
+
+// ─── GENERACIÓN DE REPORTES ───────────────────────────────────────
+function ReportesScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => void; onLogout: () => void }) {
+  const [reportType, setReportType] = useState("transitos");
+  const [dateDesde, setDateDesde] = useState("2026-06-01");
+  const [dateHasta, setDateHasta] = useState("2026-06-22");
+  const [paso, setPaso] = useState("todos");
+  const [generatedData, setGeneratedData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+
+  function handleGenerate() {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setGeneratedData({
+        title: reportType === "transitos" ? "Tránsitos por Tipo de Vehículo" 
+               : reportType === "alertas" ? "Alertas de Riesgo Detectadas" 
+               : reportType === "inspecciones" ? "Inspecciones de Andén"
+               : "Declaraciones Sanitarias SAG",
+        dateRange: `Desde ${dateDesde} hasta ${dateHasta}`,
+        paso: paso === "todos" ? "Todos los Pasos Fronterizos" : paso === "libertadores" ? "Paso Los Libertadores" : "Paso Pehuenche",
+        total: reportType === "transitos" ? 1492 : reportType === "alertas" ? 84 : reportType === "inspecciones" ? 920 : 341,
+        items: reportType === "transitos" ? [
+          { label: "Automóviles", count: 850, pct: "57%" },
+          { label: "Camionetas", count: 420, pct: "28%" },
+          { label: "Motos", count: 120, pct: "8%" },
+          { label: "Minibuses / Furgones", count: 102, pct: "7%" },
+        ] : reportType === "alertas" ? [
+          { label: "Rojo (Crítico - Placa Encargo Robo)", count: 12, pct: "14%" },
+          { label: "Naranja (Menores sin autorización notarial)", count: 32, pct: "38%" },
+          { label: "Amarillo (Discrepancia datos declarados)", count: 40, pct: "48%" },
+        ] : reportType === "inspecciones" ? [
+          { label: "Aprobados en Andén Primario", count: 850, pct: "92%" },
+          { label: "Retenidos para control", count: 45, pct: "5%" },
+          { label: "Derivados a Fosa Secundaria", count: 25, pct: "3%" },
+        ] : [
+          { label: "Productos de Origen Vegetal", count: 180, pct: "53%" },
+          { label: "Productos de Origen Animal", count: 110, pct: "32%" },
+          { label: "Mascotas Reguladas (SAG/Sanitarios)", count: 51, pct: "15%" },
+        ]
+      });
+      toast.success("Reporte estadístico generado correctamente.");
+    }, 800);
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
+      <Toaster richColors />
+      <OfficerHeader active="reportes" onNavigate={onNavigate} onLogout={onLogout} />
+
+      <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-8 flex flex-col gap-6">
+        <div>
+          <h1 className="font-semibold text-3xl text-black tracking-tight">Centro de Reportes y Estadísticas</h1>
+          <p className="text-[#545f72] text-base mt-1">Configure parámetros para generar análisis consolidados de los flujos fronterizos.</p>
+        </div>
+
+        <div className="grid grid-cols-4 gap-6 bg-white p-5 rounded-xl border border-[#c5c6cf] shadow-sm">
+          <div className="flex flex-col">
+            <label className="text-xs font-bold text-gray-700 mb-1.5">Tipo de Reporte *</label>
+            <select value={reportType} onChange={e => { setReportType(e.target.value); setGeneratedData(null); }}
+              className="bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black">
+              <option value="transitos">Tránsitos por Tipo de Vehículo</option>
+              <option value="alertas">Alertas de Riesgo Detectadas</option>
+              <option value="inspecciones">Inspecciones de Andén</option>
+              <option value="sag">Declaraciones Sanitarias SAG</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-xs font-bold text-gray-700 mb-1.5">Paso Fronterizo</label>
+            <select value={paso} onChange={e => { setPaso(e.target.value); setGeneratedData(null); }}
+              className="bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black">
+              <option value="todos">Todos los Pasos</option>
+              <option value="libertadores">Paso Los Libertadores</option>
+              <option value="pehuenche">Paso Pehuenche</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-xs font-bold text-gray-700 mb-1.5">Fecha Desde *</label>
+            <input type="date" value={dateDesde} onChange={e => { setDateDesde(e.target.value); setGeneratedData(null); }}
+              className="bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black" />
+          </div>
+
+          <div className="flex flex-col justify-end">
+            <button onClick={handleGenerate} disabled={loading}
+              className="bg-black text-white py-2 px-5 rounded-lg text-sm font-bold shadow hover:bg-gray-800 transition-colors disabled:bg-gray-400 h-9 flex items-center justify-center cursor-pointer border-none">
+              {loading ? "Generando..." : "📊 Generar Reporte"}
+            </button>
+          </div>
+        </div>
+
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20 gap-4 bg-white border border-[#c5c6cf] rounded-xl shadow-sm">
+            <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin" />
+            <p className="text-sm font-medium text-gray-500">Procesando y consolidando métricas históricas...</p>
+          </div>
+        )}
+
+        {generatedData && !loading && (
+          <div className="bg-white rounded-xl border border-[#c5c6cf] shadow-sm p-6 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom duration-300">
+            <div className="flex justify-between items-start border-b pb-4 border-[#c5c6cf]">
+              <div>
+                <h3 className="text-2xl font-bold text-black">{generatedData.title}</h3>
+                <div className="flex gap-4 text-xs text-[#545f72] font-semibold mt-1">
+                  <span>📅 {generatedData.dateRange}</span>
+                  <span>📍 {generatedData.paso}</span>
+                </div>
+              </div>
+              <button onClick={() => setIsExportOpen(true)}
+                className="bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-800 shadow transition-colors cursor-pointer border-none">
+                📥 Exportar Reporte
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-6">
+              <div className="col-span-1 bg-[#fbf8fc] rounded-lg p-5 border border-[#c5c6cf] flex flex-col justify-center">
+                <span className="text-xs font-bold text-[#545f72] uppercase tracking-wider">TOTAL REGISTROS</span>
+                <span className="text-5xl font-extrabold text-black tracking-tight mt-2">{generatedData.total}</span>
+                <span className="text-xs text-green-700 font-bold mt-1.5">✓ 100% Integridad de datos</span>
+              </div>
+
+              <div className="col-span-2 border border-[#c5c6cf] rounded-lg p-5 flex flex-col gap-4">
+                <h4 className="font-bold text-sm text-gray-700">Desglose Estadístico</h4>
+                <div className="flex flex-col gap-3">
+                  {generatedData.items.map((item: any, idx: number) => (
+                    <div key={idx} className="flex flex-col gap-1.5">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-semibold text-gray-800">{item.label}</span>
+                        <span className="font-bold text-black">{item.count} ({item.pct})</span>
+                      </div>
+                      <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+                        <div className="bg-black h-full rounded-full" style={{ width: item.pct }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} onConfirm={(fmt) => {
+        setIsExportOpen(false);
+        toast.success(`Reporte de ${generatedData.title} exportado en formato ${fmt.toUpperCase()} con éxito.`);
+      }} />
     </div>
   );
 }
@@ -2390,7 +2827,7 @@ export default function App() {
       {view === "panel" && (
         <PanelControlScreen
           onInspect={(id, patente) => { setInspectPatente(patente); setView("inspeccion"); }}
-          onAuditoria={() => setView("auditoria")}
+          onNavigate={(targetView) => setView(targetView)}
           onLogout={() => setView("login")}
         />
       )}
@@ -2398,12 +2835,18 @@ export default function App() {
         <InspeccionScreen
           patente={inspectPatente}
           onBack={() => setView("panel")}
-          onAuditoria={() => setView("auditoria")}
+          onNavigate={(targetView) => setView(targetView)}
           onLogout={() => setView("login")}
         />
       )}
       {view === "auditoria" && (
-        <AuditoriaScreen onPanel={() => setView("panel")} onLogout={() => setView("login")} />
+        <AuditoriaScreen onNavigate={(targetView) => setView(targetView)} onLogout={() => setView("login")} />
+      )}
+      {view === "usuarios" && (
+        <UsuariosScreen onNavigate={(targetView) => setView(targetView)} onLogout={() => setView("login")} />
+      )}
+      {view === "reportes" && (
+        <ReportesScreen onNavigate={(targetView) => setView(targetView)} onLogout={() => setView("login")} />
       )}
     </div>
   );
