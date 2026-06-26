@@ -180,6 +180,24 @@ const path = require('path');
   await delay(500);
   await page.screenshot({ path: path.join(outputDir, '15_funcionario_auditoria.png'), fullPage: true });
 
+  // 16. Gestión de Usuarios (Admin)
+  console.log('Capturando: 16_funcionario_usuarios');
+  await page.evaluate(() => {
+    window.setSiafUserType('funcionario');
+    window.setSiafView('usuarios');
+  });
+  await delay(500);
+  await page.screenshot({ path: path.join(outputDir, '16_funcionario_usuarios.png'), fullPage: true });
+
+  // 17. Centro de Reportes Estadísticos
+  console.log('Capturando: 17_funcionario_reportes');
+  await page.evaluate(() => {
+    window.setSiafUserType('funcionario');
+    window.setSiafView('reportes');
+  });
+  await delay(500);
+  await page.screenshot({ path: path.join(outputDir, '17_funcionario_reportes.png'), fullPage: true });
+
   console.log('Cerrando navegador...');
   await browser.close();
   console.log('¡Capturas de pantalla generadas exitosamente en vistas_siaf/!');

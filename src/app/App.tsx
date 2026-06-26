@@ -71,24 +71,46 @@ function RiskBars({ level }: { level: 1 | 2 | 3 }) {
 }
 
 // Shared officer navigation bar
+// Shared officer navigation bar
 function OfficerHeader({
-  active, onNavigate, onLogout,
+  active, onNavigate, onLogout, officerRole, setOfficerRole
 }: {
   active: View;
   onNavigate: (view: View) => void;
   onLogout: () => void;
+  officerRole: "aduana" | "pdi" | "sag" | "admin";
+  setOfficerRole: (role: "aduana" | "pdi" | "sag" | "admin") => void;
 }) {
+  const profileInfo = {
+    aduana: { name: "Inspector SNA - J. Valenzuela", dept: "SNA - ADUANAS CHILE", avatar: imgOfficerAvatar, roleLabel: "FISCALIZADOR ADUANERO" },
+    pdi: { name: "Agente PDI - D. Rebaza", dept: "POLICÍA DE INVESTIGACIONES", avatar: imgOfficerPDI, roleLabel: "CONTROL MIGRATORIO" },
+    sag: { name: "Inspector SAG - V. Orellana", dept: "SAG - SILVOAGROPECUARIO", avatar: imgOfficerAvatar, roleLabel: "INSPECCIÓN SANITARIA" },
+    admin: { name: "Administrador - Soporte SIAF", dept: "DEPARTAMENTO DE TI", avatar: imgOfficerAvatar, roleLabel: "SOPORTE Y SISTEMAS" }
+  };
+  const currentProfile = profileInfo[officerRole] || profileInfo.aduana;
+
+  const allTabs = [
+    { key: "panel",     label: "Panel Control",    onClick: () => onNavigate("panel"), allowed: ["aduana", "pdi", "sag"] },
+    { key: "usuarios",  label: "Gestión Usuarios", onClick: () => onNavigate("usuarios"), allowed: ["admin"] },
+    { key: "reportes",  label: "Reportes",         onClick: () => onNavigate("reportes"), allowed: ["aduana", "pdi", "sag"] },
+    { key: "auditoria", label: "Auditoría / Logs",  onClick: () => onNavigate("auditoria"), allowed: ["pdi", "admin"] },
+  ];
+  const activeTabs = allTabs.filter(tab => tab.allowed.includes(officerRole));
+
   return (
     <header className="bg-white border-b border-[#c5c6cf] h-16 flex items-center justify-between px-10 z-20 shrink-0 sticky top-0">
       <div className="flex items-center gap-8">
-        <span className="font-black text-xl text-black tracking-tight">SIAF</span>
+        <span className="font-black text-xl text-black tracking-tight flex items-center gap-2">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none" className="text-[#031636]">
+            <path d="M16 4L4 10v6c0 7.18 5.14 13.9 12 15.5C22.86 29.9 28 23.18 28 16v-6L16 4z"
+              stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" fill="none" />
+            <path d="M11 16l3.5 3.5L21 12" stroke="currentColor"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          SIAF
+        </span>
         <nav className="flex items-center gap-1">
-          {[
-            { key: "panel",     label: "Panel Control",    onClick: () => onNavigate("panel") },
-            { key: "usuarios",  label: "Gestión Usuarios", onClick: () => onNavigate("usuarios") },
-            { key: "reportes",  label: "Reportes",         onClick: () => onNavigate("reportes") },
-            { key: "auditoria", label: "Auditoría / Logs",  onClick: () => onNavigate("auditoria") },
-          ].map(item => (
+          {activeTabs.map(item => (
             <button key={item.key} onClick={item.onClick}
               className={`px-4 py-2 text-sm font-semibold transition-colors
                 ${active === item.key
@@ -100,6 +122,26 @@ function OfficerHeader({
         </nav>
       </div>
       <div className="flex items-center gap-4">
+        {/* Simular Rol Selector (para evaluación del prototipo) */}
+        <div className="flex items-center gap-2 bg-[#f5f3f7] rounded-lg px-3 py-1.5 border border-[#c5c6cf]">
+          <span className="text-[10px] font-bold text-[#44474e] uppercase tracking-[0.5px]">Simular Rol:</span>
+          <select value={officerRole} onChange={e => {
+            const val = e.target.value as any;
+            setOfficerRole(val);
+            if (val === "admin") {
+              onNavigate("usuarios");
+            } else {
+              onNavigate("panel");
+            }
+          }} className="bg-transparent text-xs font-bold text-black border-none outline-none cursor-pointer">
+            <option value="aduana">Aduanas (SNA)</option>
+            <option value="pdi">PDI</option>
+            <option value="sag">SAG</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div className="w-px h-8 bg-[#c5c6cf]" />
+
         <button className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
           <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
             <path d="M8 20a2 2 0 002-2H6a2 2 0 002 2zm6-6V9c0-3.07-1.64-5.64-4.5-6.32V2a1.5 1.5 0 10-3 0v.68C3.63 3.36 2 5.92 2 9v5l-2 2v1h16v-1l-2-2z" fill="#44474E" />
@@ -109,11 +151,11 @@ function OfficerHeader({
         <div className="w-px h-8 bg-[#c5c6cf]" />
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="font-semibold text-sm text-[#1b1b1e]">Oficial R. Méndez</p>
-            <p className="text-[#44474e] text-xs font-bold uppercase tracking-[0.5px]">CONTROL FRONTERIZO</p>
+            <p className="font-semibold text-sm text-[#1b1b1e]">{currentProfile.name}</p>
+            <p className="text-[#44474e] text-xs font-bold uppercase tracking-[0.5px]">{currentProfile.roleLabel}</p>
           </div>
-          <div className="w-10 h-10 rounded-full overflow-hidden border border-[#c5c6cf]">
-            <img src={imgOfficerAvatar} alt="Officer" className="w-full h-full object-cover" />
+          <div className="w-10 h-10 rounded-full overflow-hidden border border-[#c5c6cf] bg-gray-100 flex items-center justify-center">
+            <img src={currentProfile.avatar} alt="Officer" className="w-full h-full object-cover" />
           </div>
           <button onClick={onLogout} title="Cerrar sesión"
             className="text-[#44474e] hover:text-black transition-colors ml-1">
@@ -132,28 +174,39 @@ function OfficerHeader({
 function LoginScreen({
   onLogin, onForgotPassword, onRegister, onClaveUnica,
 }: {
-  onLogin: (type: UserType, rut: string) => void;
+  onLogin: (type: UserType, rut: string, role?: "aduana" | "pdi" | "sag" | "admin", country?: string) => void;
   onForgotPassword: () => void;
   onRegister: () => void;
   onClaveUnica: () => void;
 }) {
   const [rut, setRut] = useState("");
   const [pwd, setPwd] = useState("");
+  const [procedencia, setProcedencia] = useState("Chile");
+  const [docType, setDocType] = useState("Pasaporte");
+  const [docNum, setDocNum] = useState("");
+
   const [instMode, setInstMode] = useState(false);
   const [instRut, setInstRut] = useState("");
   const [instPwd, setInstPwd] = useState("");
+  const [selectedOfficerRole, setSelectedOfficerRole] = useState<"aduana" | "pdi" | "sag" | "admin">("aduana");
   const [activeModal, setActiveModal] = useState<"tramites" | "pasos" | "ayuda" | null>(null);
 
   function handleCitizenSubmit() {
-    if (!rut.trim() || !pwd.trim()) { toast.error("Ingrese RUT y contraseña"); return; }
-    toast.success("Autenticando...");
-    setTimeout(() => onLogin("ciudadano", rut), 900);
+    if (procedencia === "Chile") {
+      if (!rut.trim() || !pwd.trim()) { toast.error("Ingrese RUT y contraseña"); return; }
+      toast.success("Autenticando...");
+      setTimeout(() => onLogin("ciudadano", rut, undefined, "Chile"), 900);
+    } else {
+      if (!docNum.trim() || !pwd.trim()) { toast.error("Ingrese número de documento y contraseña"); return; }
+      toast.success(`Autenticando pasajero extranjero (${procedencia})...`);
+      setTimeout(() => onLogin("ciudadano", docNum, undefined, procedencia), 900);
+    }
   }
 
   function handleOfficerSubmit() {
     if (!instRut.trim() || !instPwd.trim()) { toast.error("Ingrese sus credenciales institucionales"); return; }
     toast.success("Verificando credenciales institucionales...");
-    setTimeout(() => onLogin("funcionario", instRut), 900);
+    setTimeout(() => onLogin("funcionario", instRut, selectedOfficerRole), 900);
   }
 
   return (
@@ -188,11 +241,25 @@ function LoginScreen({
         {/* Left — citizen */}
         <div id="acceso-sistema" className="col-span-7 md:col-span-4 bg-white rounded-xl shadow-xl p-10">
           <h2 className="text-[#031636] text-2xl font-bold mb-1">Acceso al Sistema</h2>
-          <p className="text-gray-500 text-sm mb-8">Elija su método de autenticación preferido.</p>
+          <p className="text-gray-500 text-sm mb-6">Seleccione su país de origen e inicie sesión.</p>
+
+          {/* Selector de país de procedencia */}
+          <div className="mb-6">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.5px]">País de Procedencia / Origen</label>
+            <select value={procedencia} onChange={e => setProcedencia(e.target.value)}
+              className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none focus:border-[#031636] transition-colors bg-white font-medium">
+              <option value="Chile">Chile (Ingreso / Salida)</option>
+              <option value="Argentina">Argentina (Turista extranjero)</option>
+              <option value="Perú">Perú (Turista extranjero)</option>
+              <option value="Bolivia">Bolivia (Turista extranjero)</option>
+              <option value="Otro">Otro País (Turista extranjero)</option>
+            </select>
+          </div>
 
           {/* ClaveÚnica button */}
-          <button onClick={onClaveUnica}
-            className="w-full bg-[#0056b2] text-white rounded-lg p-4 flex items-center justify-between mb-8 hover:bg-[#004494] transition-colors">
+          <button onClick={onClaveUnica} disabled={procedencia !== "Chile"}
+            className={`w-full text-white rounded-lg p-4 flex items-center justify-between mb-6 transition-colors
+              ${procedencia === "Chile" ? "bg-[#0056b2] hover:bg-[#004494]" : "bg-gray-300 cursor-not-allowed opacity-50"}`}>
             <div className="flex items-center gap-4">
               <div className="bg-white/20 rounded p-2">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -201,7 +268,7 @@ function LoginScreen({
               </div>
               <div className="text-left">
                 <p className="text-white/70 text-xs font-bold uppercase tracking-wider">INGRESAR CON</p>
-                <p className="text-white text-lg font-bold">ClaveÚnica</p>
+                <p className="text-white text-lg font-bold">ClaveÚnica {procedencia !== "Chile" && "(Solo Chilenos)"}</p>
               </div>
             </div>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -209,20 +276,39 @@ function LoginScreen({
             </svg>
           </button>
 
-          <div className="flex items-center gap-4 mb-8">
+          <div className="flex items-center gap-4 mb-6">
             <div className="flex-1 border-t border-gray-200" />
-            <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">O MEDIANTE</span>
+            <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">O MEDIANTE CREDENCIALES</span>
             <div className="flex-1 border-t border-gray-200" />
           </div>
 
           <div className="space-y-5">
+            {procedencia === "Chile" ? (
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.5px]">RUT Ciudadano</label>
+                <input value={rut} onChange={e => setRut(e.target.value)} placeholder="12.345.678-9"
+                  className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none focus:border-[#031636] transition-colors" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.5px]">Tipo de Documento</label>
+                  <select value={docType} onChange={e => setDocType(e.target.value)}
+                    className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none focus:border-[#031636] transition-colors bg-white">
+                    <option value="Pasaporte">Pasaporte</option>
+                    <option value="DNI">DNI / Cédula</option>
+                    <option value="Otro">Otro Documento</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.5px]">Número de Documento</label>
+                  <input value={docNum} onChange={e => setDocNum(e.target.value)} placeholder="Ej: ARG987654"
+                    className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none focus:border-[#031636] transition-colors" />
+                </div>
+              </div>
+            )}
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.5px]">RUT</label>
-              <input value={rut} onChange={e => setRut(e.target.value)} placeholder="12.345.678-9"
-                className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none focus:border-[#031636] transition-colors" />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.5px]">CONTRASEÑA</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.5px]">Contraseña</label>
               <input type="password" value={pwd} onChange={e => setPwd(e.target.value)} placeholder="••••••••"
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none focus:border-[#031636] transition-colors" />
             </div>
@@ -242,7 +328,7 @@ function LoginScreen({
               ¿No tiene cuenta?{" "}
               <button onClick={onRegister} className="font-bold text-[#031636] hover:underline">Registrarse</button>
             </p>
-            <span className="text-xs text-gray-400">RF-09 / RF-01</span>
+            <span className="text-xs text-gray-400">RF-09 / RF-11</span>
           </div>
         </div>
 
@@ -272,6 +358,16 @@ function LoginScreen({
             </button>
           ) : (
             <div className="space-y-4 mb-4">
+              <div>
+                <label className="text-xs font-bold text-white/60 uppercase tracking-[0.5px]">Rol / Institución</label>
+                <select value={selectedOfficerRole} onChange={e => setSelectedOfficerRole(e.target.value as any)}
+                  className="mt-1 w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-sm text-white outline-none focus:border-white/50 transition-colors">
+                  <option value="aduana" className="bg-[#0f172a] text-white">Aduana (SNA)</option>
+                  <option value="pdi" className="bg-[#0f172a] text-white">PDI (Policía de Investigaciones)</option>
+                  <option value="sag" className="bg-[#0f172a] text-white">SAG (Servicio Agrícola y Ganadero)</option>
+                  <option value="admin" className="bg-[#0f172a] text-white">Administrador del Sistema</option>
+                </select>
+              </div>
               <div>
                 <label className="text-xs font-bold text-white/60 uppercase tracking-[0.5px]">RUT Institucional</label>
                 <input value={instRut} onChange={e => setInstRut(e.target.value)} placeholder="12.345.678-9"
@@ -684,8 +780,8 @@ function RegistroUsuarioScreen({ onBack, onComplete }: { onBack: () => void; onC
 }
 
 // ─── DASHBOARD CIUDADANO ──────────────────────────────────────────
-function DashboardCiudadano({ userName, onStartTramite, onLogout }: {
-  userName: string; onStartTramite: (view: View) => void; onLogout: () => void;
+function DashboardCiudadano({ userName, onStartTramite, onLogout, userCountry }: {
+  userName: string; onStartTramite: (view: View) => void; onLogout: () => void; userCountry?: string;
 }) {
   const [showHelp, setShowHelp] = useState(false);
 
@@ -745,6 +841,19 @@ function DashboardCiudadano({ userName, onStartTramite, onLogout }: {
             Iniciar Nuevo Trámite
           </button>
         </div>
+
+        {userCountry && userCountry !== "Chile" && (
+          <div className="bg-[#fff7ed] border border-[#ffedd5] rounded-xl px-6 py-4 flex items-center justify-between mb-2 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🌎</span>
+              <div>
+                <p className="font-bold text-[#7c2d12] text-sm">Perfil de Viajero Extranjero ({userCountry})</p>
+                <p className="text-[#9a3412] text-xs">Su pre-declaración facilitará el ingreso temporal de su vehículo y pertenencias a Chile (Admisión Temporal - RF-02).</p>
+              </div>
+            </div>
+            <span className="text-xs bg-[#ffedd5] text-[#9a3412] font-black px-2.5 py-1 rounded">TRÁMITE DE ADMISIÓN</span>
+          </div>
+        )}
 
         <div className="bg-[#031636] rounded-xl p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1787,72 +1896,519 @@ function ComprobanteScreen({
 }
 
 // ─── PANEL DE CONTROL ─────────────────────────────────────────────
-const TRANSIT_DATA = [
-  { id: "1", time: "10:42:01", patente: "KJ-PR-42", folio: "FOL: 88492021-X", qr: "VÁLIDO" as const, risk: 1 as const },
-  { id: "2", time: "10:40:15", patente: "LX-29-33", folio: "FOL: 90211833-K", qr: "CADUCADO" as const, risk: 3 as const },
-  { id: "3", time: "10:38:22", patente: "BP-HS-99", folio: "FOL: 87661290-A", qr: "PROCESANDO" as const, risk: 2 as const },
-  { id: "4", time: "10:35:44", patente: "TY-01-20", folio: "FOL: 11223344-Z", qr: "VÁLIDO" as const, risk: 1 as const },
-  { id: "5", time: "10:33:10", patente: "MN-67-FD", folio: "FOL: 55443322-B", qr: "VÁLIDO" as const, risk: 1 as const },
-  { id: "6", time: "10:30:05", patente: "XR-44-PQ", folio: "FOL: 99887766-C", qr: "CADUCADO" as const, risk: 3 as const },
+// ─── PANEL DE CONTROL ─────────────────────────────────────────────
+const ADUANA_DATA = [
+  { id: "1", time: "08:15:30", patente: "KJ-PR-42", folio: "SNA-90211833-K", tipoVehiculo: "Camión de Carga Pesada", origen: "Terminal Mendoza (AR)", plazo: "Temporal (90 días)", qr: "VÁLIDO" as const, risk: 1 as const },
+  { id: "2", time: "09:22:45", patente: "LX-29-33", folio: "SNA-87661290-A", tipoVehiculo: "Furgón de Carga", origen: "San Juan (AR)", plazo: "Temporal (180 días)", qr: "CADUCADO" as const, risk: 3 as const },
+  { id: "3", time: "10:10:12", patente: "BP-HS-99", folio: "SNA-11223344-Z", tipoVehiculo: "Motocicleta Tourer", origen: "Rosario (AR)", plazo: "Temporal (90 días)", qr: "PROCESANDO" as const, risk: 2 as const },
+  { id: "4", time: "10:45:05", patente: "TY-01-20", folio: "SNA-55443322-B", tipoVehiculo: "Sedán Particular", origen: "Córdoba (AR)", plazo: "Indefinido (Nacional)", qr: "VÁLIDO" as const, risk: 1 as const },
+  { id: "5", time: "11:05:18", patente: "MN-67-FD", folio: "SNA-99887766-C", tipoVehiculo: "Camioneta 4x4", origen: "Neuquén (AR)", plazo: "Temporal (90 días)", qr: "VÁLIDO" as const, risk: 1 as const },
+  { id: "6", time: "11:58:40", patente: "XR-44-PQ", folio: "SNA-77441199-F", tipoVehiculo: "Autobús Turístico", origen: "Buenos Aires (AR)", plazo: "Temporal (30 días)", qr: "CADUCADO" as const, risk: 3 as const },
 ];
 
-function PanelControlScreen({ onInspect, onNavigate, onLogout }: {
-  onInspect: (id: string, patente: string) => void; onNavigate: (view: View) => void; onLogout: () => void;
+const PDI_PASSENGER_DATA = [
+  { id: "101", time: "08:18:22", pasajero: "Roberto Santillán", documento: "PAS: AR-9921448", nacionalidad: "Argentina", autorizacionMenores: "No Aplica", antecedentes: "Sin Antecedentes", estado: "Aprobado", patente: "KJ-PR-42" },
+  { id: "102", time: "09:25:01", pasajero: "Florencia de la Vega", documento: "DNI: 41.229.110", nacionalidad: "Argentina", autorizacionMenores: "Válida (Notaría AR-4491)", antecedentes: "Alerta - Orden de Arraigo (RF-04)", estado: "Rechazado", patente: "LX-29-33" },
+  { id: "103", time: "10:14:55", pasajero: "Sofía Martínez (Menor)", documento: "PAS: CL-8821902", nacionalidad: "Chilena", autorizacionMenores: "Pendiente (Falta firma de tutor)", antecedentes: "Sin Antecedentes", estado: "En Control", patente: "BP-HS-99" },
+  { id: "104", time: "10:48:30", pasajero: "Hans Müller", documento: "PAS: DE-G5582910", nacionalidad: "Alemana", autorizacionMenores: "No Aplica", antecedentes: "Sin Antecedentes", estado: "Aprobado", patente: "TY-01-20" },
+  { id: "105", time: "11:08:12", pasajero: "Carlos Villagrán", documento: "RUT: 14.229.581-K", nacionalidad: "Chilena", autorizacionMenores: "Válida (ClaveÚnica)", antecedentes: "En Consulta Central Interpol", estado: "En Control", patente: "MN-67-FD" },
+  { id: "106", time: "12:02:15", pasajero: "Ana María Rossi", documento: "DNI: 35.882.119", nacionalidad: "Argentina", autorizacionMenores: "No Aplica", antecedentes: "Sin Antecedentes", estado: "Aprobado", patente: "XR-44-PQ" },
+];
+
+const SAG_DECLARATIONS_DATA = [
+  { id: "201", time: "08:20:10", declarante: "Héctor Valdés", documento: "RUT: 11.456.982-1", organicosDeclarados: "Semillas de Alfalfa y Manzanas (Retenido)", mascotasDeclaradas: "Ninguna", estado: "Retenido para revisión", patente: "KJ-PR-42" },
+  { id: "202", time: "09:30:14", declarante: "Silvia Domínguez", documento: "DNI: 29.881.420", organicosDeclarados: "No declara orgánicos", mascotasDeclaradas: "1 Perro (Golden Retriever - Vacuna antirrábica OK)", estado: "Verificado SAG", patente: "LX-29-33" },
+  { id: "203", time: "10:18:05", declarante: "Federico Chiesa", documento: "PAS: IT-9944112", organicosDeclarados: "Madera tallada artesanal y flores silvestres", mascotasDeclaradas: "Ninguna", estado: "Retenido para revisión", patente: "BP-HS-99" },
+  { id: "204", time: "10:52:12", declarante: "Gerardo Soto", documento: "RUT: 15.331.420-5", organicosDeclarados: "Alimentos envasados rotulados", mascotasDeclaradas: "Ninguna", estado: "Aprobado Automático", patente: "TY-01-20" },
+  { id: "205", time: "11:12:44", declarante: "Romina Escalona", documento: "DNI: 32.145.892", organicosDeclarados: "No declara orgánicos", mascotasDeclaradas: "1 Gato (Mestizo - Certificado Zoosanitario SENASA)", estado: "Verificado SAG", patente: "MN-67-FD" },
+  { id: "206", time: "12:05:00", declarante: "Javier Zanetti", documento: "PAS: AR-2299110", organicosDeclarados: "Frutos secos procesados y miel casera (Retenida)", mascotasDeclaradas: "Ninguna", estado: "Retenido para revisión", patente: "XR-44-PQ" },
+];
+
+const ADMIN_EVENTS_DATA = [
+  { id: "301", time: "07:30:15", usuario: "Soporte SIAF (Admin)", accion: "Depuración base de datos temporal", modulo: "Módulo Infraestructura", ip: "192.168.1.10", estado: "Exitoso" },
+  { id: "302", time: "08:42:01", usuario: "J. Valenzuela (Aduana)", accion: "Aprobación de Admisión Temporal (Patente: KJ-PR-42)", modulo: "SNA Módulo de Tránsitos", ip: "192.168.10.45", estado: "Exitoso" },
+  { id: "303", time: "09:55:00", usuario: "V. Orellana (SAG)", accion: "Registro de Mascota - Chip Verificado (RF-12)", modulo: "SAG Módulo Animal", ip: "192.168.10.22", estado: "Exitoso" },
+  { id: "304", time: "10:15:30", usuario: "D. Rebaza (PDI)", accion: "Firma de Aprobación Migratoria (Tomás Fuentes)", modulo: "PDI Módulo Filiación", ip: "192.168.10.8", estado: "Exitoso" },
+  { id: "305", time: "10:38:22", usuario: "Intruso Externo", accion: "Intento Login Fallido - IP Bloqueada automáticamente (RF-09)", modulo: "Portal Autenticación", ip: "190.22.45.19", estado: "Bloqueado" },
+];
+
+function PanelControlScreen({ onInspect, onNavigate, onLogout, officerRole, setOfficerRole }: {
+  onInspect: (id: string, patente: string) => void;
+  onNavigate: (view: View) => void;
+  onLogout: () => void;
+  officerRole: "aduana" | "pdi" | "sag" | "admin";
+  setOfficerRole: (role: "aduana" | "pdi" | "sag" | "admin") => void;
 }) {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const filtered = TRANSIT_DATA.filter(r =>
-    r.patente.toLowerCase().includes(search.toLowerCase()) || r.folio.toLowerCase().includes(search.toLowerCase())
+
+  // Local interactive states for each agency
+  const [aduanaData, setAduanaData] = useState(ADUANA_DATA);
+  const [pdiData, setPdiData] = useState(PDI_PASSENGER_DATA);
+  const [sagData, setSagData] = useState(SAG_DECLARATIONS_DATA);
+
+  // Agency-specific workflows states
+  const [selectedAduanaQrRow, setSelectedAduanaQrRow] = useState<any | null>(null);
+
+  const [pdiCheckingRow, setPdiCheckingRow] = useState<any | null>(null);
+  const [interpolProgress, setInterpolProgress] = useState(0);
+  const [interpolFinished, setInterpolFinished] = useState(false);
+
+  const [sagXrayRow, setSagXrayRow] = useState<any | null>(null);
+  const [xrayProgress, setXrayProgress] = useState(0);
+  const [xrayFinished, setXrayFinished] = useState(false);
+
+  // Simulated Interpol Background Check timer
+  useEffect(() => {
+    if (!pdiCheckingRow) {
+      setInterpolProgress(0);
+      setInterpolFinished(false);
+      return;
+    }
+    setInterpolProgress(0);
+    setInterpolFinished(false);
+    let cur = 0;
+    const interval = setInterval(() => {
+      cur += 20;
+      setInterpolProgress(cur);
+      if (cur >= 100) {
+        clearInterval(interval);
+        setInterpolFinished(true);
+      }
+    }, 200);
+    return () => clearInterval(interval);
+  }, [pdiCheckingRow]);
+
+  // Simulated SAG X-Ray Luggage Scanner timer
+  useEffect(() => {
+    if (!sagXrayRow) {
+      setXrayProgress(0);
+      setXrayFinished(false);
+      return;
+    }
+    setXrayProgress(0);
+    setXrayFinished(false);
+    let cur = 0;
+    const interval = setInterval(() => {
+      cur += 25;
+      setXrayProgress(cur);
+      if (cur >= 100) {
+        clearInterval(interval);
+        setXrayFinished(true);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, [sagXrayRow]);
+
+  // Apply search query filters over state values
+  const filteredAduana = aduanaData.filter(r =>
+    r.patente.toLowerCase().includes(search.toLowerCase()) ||
+    r.folio.toLowerCase().includes(search.toLowerCase()) ||
+    r.origen.toLowerCase().includes(search.toLowerCase())
   );
+
+  const filteredPdi = pdiData.filter(r =>
+    r.pasajero.toLowerCase().includes(search.toLowerCase()) ||
+    r.documento.toLowerCase().includes(search.toLowerCase()) ||
+    r.nacionalidad.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredSag = sagData.filter(r =>
+    r.declarante.toLowerCase().includes(search.toLowerCase()) ||
+    r.documento.toLowerCase().includes(search.toLowerCase()) ||
+    r.organicosDeclarados.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredAdmin = ADMIN_EVENTS_DATA.filter(r =>
+    r.usuario.toLowerCase().includes(search.toLowerCase()) ||
+    r.accion.toLowerCase().includes(search.toLowerCase()) ||
+    r.modulo.toLowerCase().includes(search.toLowerCase()) ||
+    r.ip.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const getFilteredCount = () => {
+    switch (officerRole) {
+      case "pdi": return filteredPdi.length;
+      case "sag": return filteredSag.length;
+      case "admin": return filteredAdmin.length;
+      case "aduana":
+      default:
+        return filteredAduana.length;
+    }
+  };
+
   const qrColor = { "VÁLIDO": "green", "CADUCADO": "red", "PROCESANDO": "blue" } as const;
 
-  return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter,sans-serif" }}>
-      <Toaster richColors />
-      <OfficerHeader active="panel" onNavigate={onNavigate} onLogout={onLogout} />
+  const getStats = () => {
+    switch (officerRole) {
+      case "pdi":
+        return [
+          { label: "Menores en Tránsito", value: "14", sub: "Todos pre-validados", subColor: "#16a34a", iconBg: "#D8E2FF" },
+          { label: "Alertas de Riesgo (RF-15)", value: "03", sub: "PRIORIDAD CRÍTICA", subColor: "#ba1a1a", iconBg: "#FFDAD6", critical: true },
+          { label: "Background Checks PDI", value: "1,240", sub: "Automáticos OK", subColor: "#7384a9", iconBg: "#D8E3FA" },
+          { label: "Revisado Hoy (PDI)", value: "48", progress: 80, iconBg: "#E4E1E5" },
+        ];
+      case "sag":
+        return [
+          { label: "Declaraciones SAG (RF-07)", value: "341", sub: "98% Online", subColor: "#16a34a", iconBg: "#D8E2FF" },
+          { label: "Mascotas Registradas (RF-12)", value: "51", sub: "Certificado verificado", subColor: "#7384a9", iconBg: "#D8E3FA" },
+          { label: "Productos Retenidos (SAG)", value: "12", sub: "Inspecciones de andén", subColor: "#ba1a1a", iconBg: "#FFDAD6", critical: true },
+          { label: "Revisado Hoy (SAG)", value: "85", progress: 70, iconBg: "#E4E1E5" },
+        ];
+      case "admin":
+        return [
+          { label: "Total Usuarios Activos", value: "12", sub: "Admin / Cuentas", subColor: "#7384a9", iconBg: "#D8E2FF" },
+          { label: "Integridad Logs (RF-19)", value: "100%", sub: "Verificación SHA-256", subColor: "#16a34a", iconBg: "#D8E3FA" },
+          { label: "Intentos Login Fallidos", value: "01", sub: "IP bloqueada (RF-09)", subColor: "#ba1a1a", iconBg: "#FFDAD6", critical: true },
+          { label: "Mantenimiento Sistema", value: "Estable", progress: 100, iconBg: "#E4E1E5" },
+        ];
+      case "aduana":
+      default:
+        return [
+          { label: "Vehículos en espera", value: "124", sub: "+12% vs ayer", subColor: "#ba1a1a", iconBg: "#D8E2FF" },
+          { label: "Tránsitos Aprobados (SNA)", value: "842", sub: "Lote 08:00–10:00", subColor: "#7384a9", iconBg: "#D8E3FA" },
+          { label: "Alertas de Plazos (RF-06)", value: "05", sub: "90/180 días temporal", subColor: "#ba1a1a", iconBg: "#FFDAD6", critical: true },
+          { label: "Tf. Promedio (mins)", value: "18.5", progress: 65, iconBg: "#E4E1E5" },
+        ];
+    }
+  };
 
-      <main className="flex-1 px-10 py-6 flex flex-col gap-6 bg-[#fbf8fc]">
-        <div className="flex items-center gap-4">
-          <div className="relative max-w-sm flex-1">
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar por patente, RUT o folio..."
-              className="w-full bg-white border border-[#c5c6cf] rounded-full pl-10 pr-4 py-2.5 text-sm text-[#44474e] outline-none focus:border-[#031636] transition-colors" />
-            <svg className="absolute left-3.5 top-3" width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M5.5 10a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM11 11l-2-2" stroke="#44474E" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </div>
-          {search && <p className="text-sm text-[#44474e]">{filtered.length} resultado{filtered.length !== 1 ? "s" : ""} para "{search}"</p>}
-        </div>
+  const getAlerts = () => {
+    switch (officerRole) {
+      case "pdi":
+        return [
+          { p: "01 - CRÍTICA", t: "HACE 2 MIN", title: "Menor Tomás Fuentes: Autorización Notarial pendiente (RF-13)", bg: "bg-[#ffdad6]", border: "border-[#ba1a1a]", tc: "text-[#93000a]", action: "VERIFICAR PERMISO", as: "bg-[#ba1a1a] text-white", cb: () => toast.info("Redirigiendo a verificación notarial de menores...") },
+          { p: "02 - ALTA", t: "HACE 15 MIN", title: "Background Check: Alerta de orden de arraigo inactiva (RF-04)", bg: "bg-[#fff7ed]", border: "border-orange-500", tc: "text-[#7c2d12]", action: "CONSULTAR ANTECEDENTES", as: "border border-orange-400 text-[#7c2d12] hover:bg-orange-50", cb: () => toast.warning("Solicitud de antecedentes enviada a PDI central") },
+          { p: "03 - MEDIA", t: "HACE 42 MIN", title: "Control de Identidad: Discrepancia DNI Extranjero (RF-15)", bg: "bg-[#fef9c3]", border: "border-yellow-400", tc: "text-[#713f12]", action: "VERIFICAR DOCUMENTOS", as: "border border-yellow-400 text-[#713f12] hover:bg-yellow-50", cb: () => toast.info("Verificando datos con consulado") },
+        ];
+      case "sag":
+        return [
+          { p: "01 - CRÍTICA", t: "HACE 5 MIN", title: "Mascota ingresada sin certificado de vacuna antirrábica (RF-12)", bg: "bg-[#ffdad6]", border: "border-[#ba1a1a]", tc: "text-[#93000a]", action: "REVISAR CERTIFICADO", as: "bg-[#ba1a1a] text-white", cb: () => toast.error("Por favor verifique el certificado sanitario en la pestaña Mascotas.") },
+          { p: "02 - ALTA", t: "HACE 18 MIN", title: "Declaración SAG: Pasajero declara frutos secos sin procesar (RF-07)", bg: "bg-[#fff7ed]", border: "border-orange-500", tc: "text-[#7c2d12]", action: "SOLICITAR INSPECCIÓN VEGETAL", as: "border border-orange-400 text-[#7c2d12] hover:bg-orange-50", cb: () => toast.warning("Inspector fitosanitario asignado al andén.") },
+          { p: "03 - MEDIA", t: "HACE 1 HORA", title: "Declaración física requerida: discrepancia en escáner fitosanitario", bg: "bg-[#fef9c3]", border: "border-yellow-400", tc: "text-[#713f12]", action: "MARCAR PARA REVISIÓN", as: "border border-yellow-400 text-[#713f12] hover:bg-yellow-50", cb: () => toast.info("Equipaje marcado para revisión física.") },
+        ];
+      case "admin":
+        return [
+          { p: "01 - CRÍTICA", t: "HACE 10 MIN", title: "Intento fallido de login institucional (RUT 11.222.333-4) (RF-09)", bg: "bg-[#ffdad6]", border: "border-[#ba1a1a]", tc: "text-[#93000a]", action: "VER LOGS DE AUDITORÍA", as: "bg-[#ba1a1a] text-white", cb: () => onNavigate("auditoria") },
+          { p: "02 - ALTA", t: "HACE 1 HORA", title: "Cambio de permisos de rol: Cuenta Vicente Orellana modificada (RF-20)", bg: "bg-[#fff7ed]", border: "border-orange-500", tc: "text-[#7c2d12]", action: "REVISAR CAMBIOS", as: "border border-orange-400 text-[#7c2d12] hover:bg-orange-50", cb: () => onNavigate("usuarios") },
+        ];
+      case "aduana":
+      default:
+        return [
+          { p: "01 - CRÍTICA", t: "HACE 2 MIN", title: "Alerta de Plazo: Vehículo patente AR-22-LK expira hoy (90 días - RF-06)", bg: "bg-[#ffdad6]", border: "border-[#ba1a1a]", tc: "text-[#93000a]", action: "NOTIFICAR ADMISIÓN TEMPORAL", as: "bg-[#ba1a1a] text-white", cb: () => toast.error("Notificación enviada a Aduana de procedencia.") },
+          { p: "02 - ALTA", t: "HACE 15 MIN", title: "Trazabilidad de Carga: Manifiesto #4422-X requiere pesaje (RF-16)", bg: "bg-[#fff7ed]", border: "border-orange-500", tc: "text-[#7c2d12]", action: "SOLICITAR REVISIÓN DE CARGA", as: "border border-orange-400 text-[#7c2d12] hover:bg-orange-50", cb: () => toast.warning("Revisión física solicitada") },
+          { p: "03 - MEDIA", t: "HACE 42 MIN", title: "Placa Diplomática detectada: patente CD-2291 (RF-08)", bg: "bg-[#fef9c3]", border: "border-yellow-400", tc: "text-[#713f12]", action: "VER TRÁMITE DIPLOMÁTICO", as: "border border-yellow-400 text-[#713f12] hover:bg-yellow-50", cb: () => toast.info("Trámite diplomático validado automáticamente.") },
+        ];
+    }
+  };
 
-        <div className="grid grid-cols-4 gap-5">
-          {[
-            { label: "Vehículos en espera", value: "124", sub: "+12% vs ayer", subColor: "#ba1a1a", iconBg: "#D8E2FF" },
-            { label: "Tránsitos Aprobados", value: "842", sub: "Lote 08:00–10:00", subColor: "#7384a9", iconBg: "#D8E3FA" },
-            { label: "Alertas Activas (RF-15)", value: "03", sub: "PRIORIDAD CRÍTICA", subColor: "#ba1a1a", iconBg: "#FFDAD6", critical: true },
-            { label: "Tf. Promedio (mins)", value: "18.5", progress: 65, iconBg: "#E4E1E5" },
-          ].map((s, i) => (
-            <div key={i} className={`bg-white rounded-xl p-4 border shadow-sm flex flex-col justify-between
-              ${s.critical ? "border-l-4 border-l-[#ba1a1a] border-[#c5c6cf]" : "border-[#c5c6cf]"}`}>
-              <div className="flex items-start justify-between">
-                <p className="text-sm font-semibold text-[#44474e] leading-tight">{s.label}</p>
-                <div className="rounded-lg w-8 h-8 shrink-0" style={{ background: s.iconBg }} />
+  const renewAduanaQr = (id: string) => {
+    setAduanaData(prev => prev.map(row => {
+      if (row.id === id) {
+        return { ...row, plazo: "Temporal (180 días)", qr: "VÁLIDO" as const, risk: 1 as const };
+      }
+      return row;
+    }));
+  };
+
+  const revokeAduanaQr = (id: string) => {
+    setAduanaData(prev => prev.map(row => {
+      if (row.id === id) {
+        return { ...row, qr: "CADUCADO" as const, risk: 3 as const };
+      }
+      return row;
+    }));
+  };
+
+  const updatePdiStatus = (id: string, newStatus: string) => {
+    setPdiData(prev => prev.map(row => {
+      if (row.id === id) {
+        return { ...row, estado: newStatus };
+      }
+      return row;
+    }));
+  };
+
+  const updateSagStatus = (id: string, newStatus: string) => {
+    setSagData(prev => prev.map(row => {
+      if (row.id === id) {
+        return { ...row, estado: newStatus };
+      }
+      return row;
+    }));
+  };
+
+  const renderTableContent = () => {
+    switch (officerRole) {
+      case "pdi":
+        return (
+          <div className="bg-[#0b1329] text-slate-100 p-6 min-h-[500px]">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+              <div>
+                <h3 className="text-xl font-bold tracking-tight text-cyan-400">PDI Terminal de Control Biométrico y Migratorio</h3>
+                <p className="text-xs text-slate-400">Verificación de alertas nacionales e internacionales, filiaciones y match biométrico (RF-13/RF-04)</p>
               </div>
-              <div className="mt-4">
-                <p className="text-4xl font-semibold tracking-tight" style={{ color: s.critical ? "#ba1a1a" : "black" }}>{s.value}</p>
-                {(s as { progress?: number }).progress !== undefined
-                  ? <div className="bg-[#e4e1e5] h-1.5 rounded-full mt-2 overflow-hidden"><div className="bg-[#364669] h-full rounded-full" style={{ width: `${(s as { progress: number }).progress}%` }} /></div>
-                  : <p className="text-sm font-bold mt-1" style={{ color: (s as { subColor: string }).subColor }}>{(s as { sub: string }).sub}</p>}
+              <button onClick={() => toast.success("Base de datos PDI exportada en archivo encriptado")} 
+                className="bg-cyan-500/20 hover:bg-cyan-500/35 border border-cyan-500/50 text-cyan-200 text-xs px-3 py-1.5 rounded font-bold cursor-pointer transition-colors">
+                Exportar Logs PDI
+              </button>
+            </div>
+
+            <div className="grid gap-4 mt-2">
+              {filteredPdi.length === 0 ? (
+                <p className="text-slate-500 text-center py-8 text-sm">No se encontraron pasajeros en control.</p>
+              ) : (
+                filteredPdi.map(row => {
+                  const isRejected = row.estado === "Rechazado";
+                  const isControl = row.estado === "En Control";
+                  const isApproved = row.estado === "Aprobado";
+                  
+                  return (
+                    <div key={row.id} className={`border rounded-lg p-4 transition-all duration-200 bg-[#0f1b35] 
+                      ${isRejected ? "border-red-800/80 bg-red-955/10" : isControl ? "border-cyan-800/60" : "border-emerald-800/80 bg-emerald-955/10"}`}>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded bg-[#1e2e4f] flex flex-col items-center justify-center text-xl shrink-0 border border-slate-700">
+                            {row.pasajero.includes("Menor") ? "👦" : "👤"}
+                            <span className="text-[8px] text-slate-400 font-mono mt-0.5">PDI</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center flex-wrap gap-2">
+                              <h4 className="font-bold text-slate-200 text-base">{row.pasajero}</h4>
+                              <span className="text-[10px] bg-slate-800 text-slate-300 font-bold px-2 py-0.5 rounded-sm border border-slate-700">{row.nacionalidad}</span>
+                              <span className="text-[10px] bg-cyan-900/40 text-cyan-300 border border-cyan-800/40 font-bold px-2 py-0.5 rounded-sm">INGRESO</span>
+                            </div>
+                            
+                            <div className="mt-1 text-xs font-mono text-slate-400 space-y-1">
+                              <div>DOC: <span className="text-slate-300">{row.documento}</span> | HORA: <span className="text-slate-300">{row.time}</span></div>
+                              <div className="text-[10px] text-slate-550">MRZ: P&lt;CHL{row.pasajero.split(' ').map(n=>n[0]).join('')}&lt;&lt;&lt;{row.id}98271&lt;&lt;&lt;&lt;&lt;</div>
+                            </div>
+
+                            {/* Biometrics */}
+                            <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-300 font-semibold bg-slate-900/60 px-3 py-1.5 rounded border border-slate-800 w-fit">
+                              <span className="text-emerald-400 flex items-center gap-1">👤 Match Facial: 98.4%</span>
+                              <span className="text-slate-500">|</span>
+                              <span className="text-cyan-400 flex items-center gap-1">✋ Huella: Validada</span>
+                              <span className="text-slate-500">|</span>
+                              <span className="text-slate-400 font-sans">Autorización Menores: {row.autorizacionMenores}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end justify-between gap-2 border-t md:border-t-0 pt-3 md:pt-0 border-slate-800 shrink-0">
+                          <div className="text-right">
+                            <span className={`text-xs font-black uppercase px-2 py-1 rounded inline-block font-mono
+                              ${isRejected ? "bg-red-950 text-red-400 border border-red-800" : isControl ? "bg-cyan-950 text-cyan-400 border border-cyan-800" : "bg-emerald-950 text-emerald-400 border border-emerald-800"}`}>
+                              {isRejected ? "🚨 RECHAZADO / DETENCIÓN" : isControl ? "🔍 EN CONTROL" : "✓ MIGRACIÓN APROBADA"}
+                            </span>
+                          </div>
+
+                          <div className="flex gap-2 mt-1">
+                            {isControl && (
+                              <button onClick={() => setPdiCheckingRow(row)}
+                                className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs px-3 py-2 rounded transition-colors cursor-pointer border-none font-mono">
+                                Cotejar Interpol
+                              </button>
+                            )}
+                            <button onClick={() => onInspect(row.id, row.patente)}
+                              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs px-3 py-2 rounded transition-colors cursor-pointer">
+                              Ejecutar Control
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        );
+      case "sag":
+        // Group passengers into Green Channel vs Red Channel
+        const greenChannel = filteredSag.filter(r => r.organicosDeclarados.includes("No declara") && r.mascotasDeclaradas.includes("Ninguna"));
+        const redChannel = filteredSag.filter(r => !r.organicosDeclarados.includes("No declara") || !r.mascotasDeclaradas.includes("Ninguna"));
+
+        return (
+          <div className="bg-[#f0f4f1] text-[#1b3a24] p-6 min-h-[500px]">
+            <div className="flex items-center justify-between border-b border-[#cbd5c0] pb-4 mb-6">
+              <div>
+                <h3 className="text-xl font-bold tracking-tight text-[#1b5e20]">SAG Terminal de Inspección Fitosanitaria</h3>
+                <p className="text-xs text-[#4e6a54]">Control e ingreso de productos silvoagropecuarios, semillas y mascotas (RF-07/RF-12)</p>
+              </div>
+              <button onClick={() => toast.success("Declaraciones fitosanitarias exportadas para base de datos")} 
+                className="bg-[#2e7d32] hover:bg-[#1b5e20] text-white text-xs px-3 py-1.5 rounded font-bold border-none cursor-pointer transition-colors">
+                Exportar SAG
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Green Channel Column */}
+              <div className="bg-white rounded-xl p-4 border border-[#e0e7e1] shadow-sm flex flex-col">
+                <div className="flex items-center gap-2 border-b border-[#e8efe9] pb-2 mb-3">
+                  <span className="text-emerald-600 text-lg">🟢</span>
+                  <h4 className="font-bold text-sm uppercase text-[#2e7d32]">Canal Verde (Auto-Aprobación)</h4>
+                  <span className="ml-auto text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">{greenChannel.length} Pasajeros</span>
+                </div>
+                <div className="space-y-3 flex-1">
+                  {greenChannel.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8 text-xs italic">No hay pasajeros en Canal Verde</p>
+                  ) : (
+                    greenChannel.map(row => {
+                      const isApproved = row.estado === "Verificado SAG" || row.estado === "Aprobado Automático";
+                      return (
+                        <div key={row.id} className={`p-3 rounded-lg border transition-all ${isApproved ? "bg-emerald-50/40 border-emerald-200" : "bg-[#fcfdfc] border-gray-200"}`}>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h5 className="font-bold text-sm text-gray-800">{row.declarante}</h5>
+                              <p className="text-xs text-gray-500 font-mono">{row.documento} | {row.time}</p>
+                              <div className="mt-2 text-[11px] text-emerald-800 bg-emerald-50 px-2 py-1 rounded inline-block font-semibold">
+                                ✓ No declara orgánicos ni mascotas
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2 shrink-0">
+                              <span className="text-[10px] text-emerald-700 font-bold">{row.estado}</span>
+                              {!isApproved ? (
+                                <button onClick={() => {
+                                  updateSagStatus(row.id, "Aprobado Automático");
+                                  toast.success(`✓ Pasajero ${row.declarante} aprobado y liberado por Canal Verde.`);
+                                }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded border-none cursor-pointer transition-colors">
+                                  Dar Pase Rápido
+                                </button>
+                              ) : (
+                                <span className="text-emerald-600 font-bold text-xs">✓ Liberado</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Red Channel Column */}
+              <div className="bg-white rounded-xl p-4 border border-[#f5e1e1] shadow-sm flex flex-col">
+                <div className="flex items-center gap-2 border-b border-[#fceaea] pb-2 mb-3">
+                  <span className="text-amber-600 text-lg">🔴</span>
+                  <h4 className="font-bold text-sm uppercase text-amber-800">Canal Rojo (Revisión Fitosanitaria)</h4>
+                  <span className="ml-auto text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">{redChannel.length} En cola</span>
+                </div>
+                <div className="space-y-3 flex-1">
+                  {redChannel.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8 text-xs italic">No hay pasajeros en Canal Rojo</p>
+                  ) : (
+                    redChannel.map(row => {
+                      const isInspected = row.estado === "Verificado SAG" || row.estado === "Aprobado Automático";
+                      const isRetained = row.estado.includes("Retenido");
+                      
+                      return (
+                        <div key={row.id} className={`p-3 rounded-lg border transition-all ${isInspected ? "bg-emerald-50/40 border-emerald-200" : isRetained ? "bg-amber-50/40 border-amber-200" : "bg-[#fffcfc] border-red-200"}`}>
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <h5 className="font-bold text-sm text-gray-800">{row.declarante}</h5>
+                              <p className="text-xs text-gray-550 font-mono">{row.documento} | {row.time}</p>
+                              
+                              <div className="text-[11px] space-y-1 mt-2">
+                                <div className="text-gray-700">🌾 <span className="font-bold">Orgánicos:</span> <span className="text-amber-800 font-semibold">{row.organicosDeclarados}</span></div>
+                                <div className="text-gray-700">🐾 <span className="font-bold">Mascotas:</span> <span className="text-emerald-800 font-semibold">{row.mascotasDeclaradas}</span></div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-end gap-2 shrink-0">
+                              <span className={`text-[10px] font-bold ${isRetained ? "text-amber-700" : "text-emerald-700"}`}>{row.estado}</span>
+                              <div className="flex flex-col gap-1 w-full">
+                                {!isInspected && (
+                                  <button onClick={() => setSagXrayRow(row)} 
+                                    className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] px-2 py-1.5 rounded border-none cursor-pointer text-center font-mono">
+                                    Rayos X Scanner
+                                  </button>
+                                )}
+                                <button onClick={() => onInspect(row.id, row.patente)} 
+                                  className="bg-gray-800 hover:bg-gray-700 text-white text-[10px] px-2 py-1.5 rounded border-none cursor-pointer text-center">
+                                  Inspeccionar
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 bg-white rounded-xl border border-[#c5c6cf] shadow-sm overflow-hidden">
+          </div>
+        );
+      case "admin":
+        return (
+          <>
             <div className="bg-[#f5f3f7] border-b border-[#c5c6cf] px-4 py-4 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-xl text-black">Flujo en Tiempo Real</h3>
-                <p className="text-sm text-[#44474e]">Últimos 50 movimientos registrados</p>
+                <h3 className="font-semibold text-xl text-black">Consola de Administración y Auditoría</h3>
+                <p className="text-sm text-[#44474e]">Monitoreo de seguridad, accesos de red y cumplimiento normativo (RF-19)</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => onNavigate("auditoria")} className="bg-black text-white text-sm px-3 py-1.5 rounded-lg hover:bg-gray-800">Ver Logs de Auditoría →</button>
+              </div>
+            </div>
+            <div className="p-4 bg-[#eae7eb]/20 border-b border-[#c5c6cf] flex items-center justify-around gap-4 text-center">
+              <div className="flex-1 bg-white p-3 rounded-lg border border-[#c5c6cf] shadow-sm">
+                <h4 className="font-bold text-[#1b1b1e] text-xs uppercase tracking-wider text-[#7384a9]">Usuarios en Sistema</h4>
+                <p className="text-2xl font-black text-black mt-1">11 Activos</p>
+                <button onClick={() => onNavigate("usuarios")} className="mt-2 text-xs font-semibold text-[#364669] hover:underline block mx-auto">Gestionar Cuentas →</button>
+              </div>
+              <div className="flex-1 bg-white p-3 rounded-lg border border-[#c5c6cf] shadow-sm">
+                <h4 className="font-bold text-[#1b1b1e] text-xs uppercase tracking-wider text-[#7384a9]">Firma Digital (RF-19)</h4>
+                <p className="text-sm font-bold text-[#166534] mt-2">✓ ALMACENADO CON SHA-256</p>
+                <button onClick={() => onNavigate("auditoria")} className="mt-2 text-xs font-semibold text-[#364669] hover:underline block mx-auto">Validar Logs →</button>
+              </div>
+              <div className="flex-1 bg-white p-3 rounded-lg border border-[#c5c6cf] shadow-sm">
+                <h4 className="font-bold text-[#1b1b1e] text-xs uppercase tracking-wider text-[#7384a9]">Seguridad de Red (RF-09)</h4>
+                <p className="text-sm font-semibold text-[#ba1a1a] mt-2">MFA Habilitado en 100%</p>
+                <button onClick={() => toast.info("Configuraciones de MFA y Firewall activadas en el gateway de aduanas.")} className="mt-2 text-xs font-semibold text-[#364669] hover:underline block mx-auto">Ver Firewall →</button>
+              </div>
+            </div>
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#eae7eb]">
+                  <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px] w-24">HORA</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px]">USUARIO</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px]">ACCIÓN / EVENTO DE SEGURIDAD</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px]">MÓDULO</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px] w-36">IP ORIGEN</th>
+                  <th className="text-right px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px] w-28">ESTADO LOG</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAdmin.map(row => {
+                  const estColor = row.estado === "Exitoso" ? "green" : "red";
+                  return (
+                    <tr key={row.id}
+                      className={`border-t border-[#c5c6cf] hover:bg-gray-50 transition-colors ${row.estado === "Bloqueado" ? "bg-[rgba(255,218,214,0.05)]" : ""}`}>
+                      <td className="px-4 py-5 text-sm text-[#1b1b1e] font-mono">{row.time}</td>
+                      <td className="px-4 py-4">
+                        <p className="font-bold text-sm text-black">{row.usuario}</p>
+                      </td>
+                      <td className="px-4 py-5 text-sm font-semibold text-[#1b1b1e]">{row.accion}</td>
+                      <td className="px-4 py-5 text-sm text-[#44474e]">{row.modulo}</td>
+                      <td className="px-4 py-5 text-sm font-mono text-[#44474e]">{row.ip}</td>
+                      <td className="px-4 py-5 text-right"><Badge color={estColor} label={row.estado} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
+        );
+      case "aduana":
+      default:
+        return (
+          <>
+            <div className="bg-[#f5f3f7] border-b border-[#c5c6cf] px-4 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-xl text-black">Control de Tránsitos (SNA)</h3>
+                <p className="text-sm text-[#44474e]">Registro de vehículos, manifiesto de carga (RF-16) y plazos legales (RF-06)</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => setIsExportOpen(true)} className="border border-[#75777f] text-sm px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50">Exportar</button>
@@ -1864,13 +2420,16 @@ function PanelControlScreen({ onInspect, onNavigate, onLogout }: {
                 <tr className="bg-[#eae7eb]">
                   <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px] w-24">HORA</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px]">PATENTE / FOLIO</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px]">VEHÍCULO / ORIGEN</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px]">PLAZO ADMISIÓN TEMPORAL (RF-06)</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px]">PRECINTO DE CARGA (RF-16)</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px] w-36">ESTADO QR</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px] w-24">RIESGO</th>
                   <th className="text-right px-4 py-3 text-xs font-bold text-[#44474e] uppercase tracking-[0.7px] w-24">ACCIÓN</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(row => (
+                {filteredAduana.map(row => (
                   <tr key={row.id}
                     className={`border-t border-[#c5c6cf] hover:bg-gray-50 cursor-pointer transition-colors ${row.qr === "CADUCADO" ? "bg-[rgba(255,218,214,0.05)]" : ""}`}
                     onClick={() => onInspect(row.id, row.patente)}>
@@ -1879,39 +2438,110 @@ function PanelControlScreen({ onInspect, onNavigate, onLogout }: {
                       <p className="font-bold text-base text-black">{row.patente}</p>
                       <p className="text-[#44474e] text-xs">{row.folio}</p>
                     </td>
-                    <td className="px-4 py-5"><Badge color={qrColor[row.qr]} label={row.qr} /></td>
+                    <td className="px-4 py-5 text-sm text-[#1b1b1e]">
+                      <p className="font-medium text-black">{row.tipoVehiculo}</p>
+                      <p className="text-xs text-[#44474e]">{row.origen}</p>
+                    </td>
+                    <td className="px-4 py-5 text-sm">
+                      <div className="flex flex-col gap-1 w-36">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold w-fit ${row.plazo.includes("Temporal") ? "bg-[#e0e2ec] text-[#44474e]" : "bg-[#dcfce7] text-[#166534]"}`}>
+                          {row.plazo}
+                        </span>
+                        {row.plazo.includes("Temporal") && (
+                          <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden mt-1">
+                            <div className="bg-orange-500 h-full rounded-full" style={{ width: row.id === "1" ? "45%" : row.id === "2" ? "80%" : "60%" }} />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-5 text-xs">
+                      <span className={`font-bold flex items-center gap-1.5 ${row.tipoVehiculo.includes("Camión") || row.tipoVehiculo.includes("Furgón de Carga") ? "text-blue-700" : "text-gray-400"}`}>
+                        {row.tipoVehiculo.includes("Camión") || row.tipoVehiculo.includes("Furgón de Carga") ? (
+                          <>
+                            <span className="text-[10px] bg-blue-100 px-1.5 py-0.5 rounded-sm">🔒 CERRADO</span>
+                            <span>Precinto #{3340 + Number(row.id)}</span>
+                          </>
+                        ) : "No Aplica"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-5 font-mono" onClick={(e) => { e.stopPropagation(); setSelectedAduanaQrRow(row); }}>
+                      <div className="flex items-center gap-1 group">
+                        <Badge color={qrColor[row.qr]} label={row.qr} />
+                        <span className="text-[10px] text-gray-500 group-hover:text-blue-600 underline font-sans ml-1">Auditar</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-5"><RiskBars level={row.risk} /></td>
                     <td className="px-4 py-5 text-right">
                       <button onClick={e => { e.stopPropagation(); onInspect(row.id, row.patente); }}
                         className="p-2 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium text-[#44474e] hover:text-black">
-                        Ver →
+                        Revisar →
                       </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter,sans-serif" }}>
+      <Toaster richColors />
+      <OfficerHeader active="panel" onNavigate={onNavigate} onLogout={onLogout} officerRole={officerRole} setOfficerRole={setOfficerRole} />
+
+      <main className="flex-1 px-10 py-6 flex flex-col gap-6 bg-[#fbf8fc]">
+        <div className="flex items-center gap-4">
+          <div className="relative max-w-sm flex-1">
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar por patente, RUT, nombre o folio..."
+              className="w-full bg-white border border-[#c5c6cf] rounded-full pl-10 pr-4 py-2.5 text-sm text-[#44474e] outline-none focus:border-[#031636] transition-colors" />
+            <svg className="absolute left-3.5 top-3" width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M5.5 10a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM11 11l-2-2" stroke="#44474E" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+          {search && <p className="text-sm text-[#44474e]">{getFilteredCount()} resultado{getFilteredCount() !== 1 ? "s" : ""} para "{search}"</p>}
+        </div>
+
+        <div className="grid grid-cols-4 gap-5">
+          {getStats().map((s, i) => (
+            <div key={i} className={`bg-white rounded-xl p-4 border shadow-sm flex flex-col justify-between
+              \${s.critical ? "border-l-4 border-l-[#ba1a1a] border-[#c5c6cf]" : "border-[#c5c6cf]"}`}>
+              <div className="flex items-start justify-between">
+                <p className="text-sm font-semibold text-[#44474e] leading-tight">{s.label}</p>
+                <div className="rounded-lg w-8 h-8 shrink-0" style={{ background: s.iconBg }} />
+              </div>
+              <div className="mt-4">
+                <p className="text-4xl font-semibold tracking-tight" style={{ color: s.critical ? "#ba1a1a" : "black" }}>{s.value}</p>
+                {(s as { progress?: number }).progress !== undefined
+                  ? <div className="bg-[#e4e1e5] h-1.5 rounded-full mt-2 overflow-hidden"><div className="bg-[#364669] h-full rounded-full" style={{ width: `\${(s as { progress: number }).progress}%` }} /></div>
+                  : <p className="text-sm font-bold mt-1" style={{ color: (s as { subColor: string }).subColor }}>{(s as { sub: string }).sub}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-3 gap-6">
+          <div className="col-span-2 bg-white rounded-xl border border-[#c5c6cf] shadow-sm overflow-hidden">
+            {renderTableContent()}
           </div>
 
           <div className="flex flex-col gap-4">
             <div className="bg-white rounded-xl border border-[#c5c6cf] overflow-hidden">
               <div className="bg-[#410006] px-4 py-4 flex items-center gap-2">
                 <span className="text-white text-sm">🔔</span>
-                <h4 className="text-white font-bold text-xs uppercase tracking-[1.4px]">ALERTAS RF-15 (FRONTERA)</h4>
+                <h4 className="text-white font-bold text-xs uppercase tracking-[1.4px]">Alertas del Sistema</h4>
               </div>
               <div className="p-3 space-y-3">
-                {[
-                  { p: "01 - CRÍTICA", t: "HACE 2 MIN", title: "Desvío de Ruta Detectado - RF-15-X90", bg: "bg-[#ffdad6]", border: "border-[#ba1a1a]", tc: "text-[#93000a]", action: "INTERVENIR AHORA", as: "bg-[#ba1a1a] text-white", cb: () => toast.error("Intervención registrada. Unidades enviadas.") },
-                  { p: "02 - ALTA", t: "HACE 15 MIN", title: "Inconsistencia de Carga (Peso Neto)", bg: "bg-[#fff7ed]", border: "border-orange-500", tc: "text-[#7c2d12]", action: "SOLICITAR REVISIÓN", as: "border border-orange-400 text-[#7c2d12] hover:bg-orange-50", cb: () => toast.warning("Revisión física solicitada") },
-                  { p: "03 - MEDIA", t: "HACE 42 MIN", title: "QR Escaneado 2x sin coincidencia", bg: "bg-[#fef9c3]", border: "border-yellow-400", tc: "text-[#713f12]", action: "MARCAR REVISADA", as: "border border-yellow-400 text-[#713f12] hover:bg-yellow-50", cb: () => toast.info("Alerta marcada como revisada") },
-                ].map(alert => (
-                  <div key={alert.title} className={`${alert.bg} border-l-4 ${alert.border} rounded-lg pl-4 pr-3 py-3`}>
+                {getAlerts().map(alert => (
+                  <div key={alert.title} className={`\${alert.bg} border-l-4 \${alert.border} rounded-lg pl-4 pr-3 py-3`}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`${alert.tc} text-xs font-black uppercase`}>PRIORIDAD: {alert.p}</span>
-                      <span className={`${alert.tc} text-xs`}>{alert.t}</span>
+                      <span className={`\${alert.tc} text-xs font-black uppercase`}>PRIORIDAD: {alert.p}</span>
+                      <span className={`\${alert.tc} text-xs`}>{alert.t}</span>
                     </div>
-                    <p className={`font-bold ${alert.tc} text-xs mb-3`}>{alert.title}</p>
-                    <button onClick={alert.cb} className={`w-full text-xs font-bold uppercase py-1.5 rounded ${alert.as}`}>{alert.action}</button>
+                    <p className={`font-bold \${alert.tc} text-xs mb-3`}>{alert.title}</p>
+                    <button onClick={alert.cb} className={`w-full text-xs font-bold uppercase py-1.5 rounded \${alert.as}`}>{alert.action}</button>
                   </div>
                 ))}
               </div>
@@ -1923,34 +2553,397 @@ function PanelControlScreen({ onInspect, onNavigate, onLogout }: {
         setIsExportOpen(false);
         toast.success(`Archivo de tránsitos exportado en formato ${fmt.toUpperCase()} con éxito.`);
       }} />
+
+      {/* ============================================================== */}
+      {/* CUSTOM OVERLAY MODALS FOR AGENCY WORKFLOWS                     */}
+      {/* ============================================================== */}
+
+      {/* ADUANA QR AUDIT MODAL */}
+      {selectedAduanaQrRow && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden transform transition-all">
+            <div className="bg-[#031636] text-white px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🔍</span>
+                <h3 className="font-bold text-lg">Auditoría de Firma QR (SNA)</h3>
+              </div>
+              <button onClick={() => setSelectedAduanaQrRow(null)} className="text-white hover:text-gray-300 bg-transparent border-none text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex justify-center py-2">
+                <div className="p-3 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl relative group">
+                  <div className="w-40 h-40 bg-white grid grid-cols-5 gap-1 p-2">
+                    {Array.from({ length: 25 }).map((_, i) => (
+                      <div key={i} className={`rounded-sm ${(i % 3 === 0 || i % 7 === 0 || i < 6 || i % 5 === 0) ? "bg-[#031636]" : "bg-transparent"}`} />
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 bg-black/5 hover:bg-transparent transition-colors flex items-center justify-center">
+                    <span className="text-[10px] bg-white/95 text-black font-bold px-2 py-0.5 rounded shadow">Firma Validada</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm text-[#1b1b1e] bg-gray-50 p-4 rounded-xl border border-gray-100 font-mono">
+                <div className="flex justify-between border-b border-gray-200 pb-1.5"><span className="text-gray-500 font-sans">Patente:</span><span className="font-bold">{selectedAduanaQrRow.patente}</span></div>
+                <div className="flex justify-between border-b border-gray-200 pb-1.5"><span className="text-gray-500 font-sans">Folio Único:</span><span className="font-semibold text-xs">{selectedAduanaQrRow.folio}</span></div>
+                <div className="flex justify-between border-b border-gray-200 pb-1.5"><span className="text-gray-500 font-sans">Plazo Legal (RF-06):</span><span>{selectedAduanaQrRow.plazo}</span></div>
+                <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                  <span className="text-gray-500 font-sans">Estado QR:</span>
+                  <Badge color={qrColor[selectedAduanaQrRow.qr]} label={selectedAduanaQrRow.qr} />
+                </div>
+                <div className="pt-1.5">
+                  <span className="text-[10px] text-gray-500 font-sans block mb-1">HASH VERIFICACIÓN (SHA-256):</span>
+                  <span className="text-[9px] text-gray-600 block break-all font-mono">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button onClick={() => {
+                  renewAduanaQr(selectedAduanaQrRow.id);
+                  toast.success(`✓ Admisión temporal de vehículo ${selectedAduanaQrRow.patente} prorrogada con éxito.`);
+                  setSelectedAduanaQrRow(null);
+                }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg border-none text-xs cursor-pointer transition-colors shadow-sm">
+                  Prorrogar Plazo (+90d)
+                </button>
+                <button onClick={() => {
+                  revokeAduanaQr(selectedAduanaQrRow.id);
+                  toast.error(`🚨 Código QR de vehículo ${selectedAduanaQrRow.patente} invalidado y revocado en aduanas.`);
+                  setSelectedAduanaQrRow(null);
+                }} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg border-none text-xs cursor-pointer transition-colors shadow-sm">
+                  Revocar QR / Alerta
+                </button>
+              </div>
+              
+              <button onClick={() => setSelectedAduanaQrRow(null)} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 rounded-lg border-none text-xs cursor-pointer transition-colors mt-2">
+                Cerrar Auditoría
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDI INTERPOL CHECK MODAL */}
+      {pdiCheckingRow && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0b1220] rounded-2xl max-w-md w-full shadow-2xl border border-slate-800 overflow-hidden transform transition-all font-sans">
+            <div className="bg-[#0a0f1d] px-6 py-4 flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🚨</span>
+                <h3 className="font-bold text-lg text-cyan-400 font-mono uppercase tracking-wider">Interpol Query Terminal</h3>
+              </div>
+              <button onClick={() => setPdiCheckingRow(null)} className="text-slate-400 hover:text-white bg-transparent border-none text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {!interpolFinished ? (
+                <div className="space-y-4 text-center py-6">
+                  <div className="w-16 h-16 border-4 border-slate-700 border-t-cyan-500 rounded-full animate-spin mx-auto" />
+                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-4">
+                    <div className="bg-cyan-500 h-full rounded-full transition-all duration-200" style={{ width: `${interpolProgress}%` }} />
+                  </div>
+                  
+                  <div className="bg-[#040811] text-[#00ffcc] p-4 rounded-lg font-mono text-left text-xs h-32 overflow-y-auto space-y-1">
+                    <p className="opacity-60">{`[SYSTEM] Connecting to central node Lyon...`}</p>
+                    {interpolProgress >= 20 && <p>{`> Match biometric face print... OK`}</p>}
+                    {interpolProgress >= 40 && <p className="text-yellow-400">{`> Verifying document: ${pdiCheckingRow.documento}`}</p>}
+                    {interpolProgress >= 60 && <p>{`> Calling Interpol database indexes...`}</p>}
+                    {interpolProgress >= 80 && <p className={pdiCheckingRow.id === "102" ? "text-red-400 font-bold" : "text-cyan-400"}>
+                      {pdiCheckingRow.id === "102" ? "> ALERT: Matches red notice database!" : "> Clean: No records found."}
+                    </p>}
+                    {interpolProgress >= 100 && <p className="text-[#00ffcc] animate-pulse">{`> Check completed successfully.`}</p>}
+                  </div>
+                  <p className="text-slate-400 text-xs font-mono">Consola PDI Activa - Procesando {interpolProgress}%</p>
+                </div>
+              ) : (
+                <div className="space-y-4 font-sans text-slate-200">
+                  <div className="bg-[#10192e] rounded-xl p-4 border border-slate-800 flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-[#1b2b4a] border border-cyan-500/30 flex items-center justify-center text-3xl">
+                      {pdiCheckingRow.pasajero.includes("Menor") ? "👦" : "👤"}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-200 text-base">{pdiCheckingRow.pasajero}</h4>
+                      <p className="text-xs text-slate-400 font-mono">{pdiCheckingRow.documento}</p>
+                      <p className="text-xs text-slate-400 mt-1 font-semibold">Nacionalidad: <span className="text-slate-200">{pdiCheckingRow.nacionalidad}</span></p>
+                    </div>
+                  </div>
+
+                  <div className={`p-4 rounded-xl border text-sm space-y-2 font-mono
+                    ${pdiCheckingRow.id === "102" 
+                      ? "bg-red-950/20 border-red-800 text-red-300" 
+                      : pdiCheckingRow.id === "105"
+                      ? "bg-amber-950/20 border-amber-800 text-amber-300"
+                      : "bg-emerald-950/20 border-emerald-800 text-emerald-300"}`}>
+                    
+                    <h5 className="font-bold text-xs uppercase tracking-wider font-sans mb-1 text-slate-200">Resultado de Base de Datos Internacional:</h5>
+                    
+                    {pdiCheckingRow.id === "102" ? (
+                      <>
+                        <p className="font-bold text-red-400 flex items-center gap-1.5">🚨 ALERTA ROJA INTERPOL DETECTADA</p>
+                        <p className="text-xs font-sans text-slate-300">Orden de captura internacional emitida por Tribunal Penal de Buenos Aires (Argentina) por Delito Financiero y Fraude Mayor.</p>
+                      </>
+                    ) : pdiCheckingRow.id === "105" ? (
+                      <>
+                        <p className="font-bold text-amber-400 flex items-center gap-1.5">⚠️ ANTECEDENTES PENDIENTES</p>
+                        <p className="text-xs font-sans text-slate-300">La consulta central arrojó una coincidencia parcial de alcance nacional. Requiere control de firma de tutor.</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-bold text-emerald-400 flex items-center gap-1.5">✓ SIN CARGOS / LIMPIO</p>
+                        <p className="text-xs font-sans text-slate-300">El pasajero no registra antecedentes delictuales, órdenes de arraigo activas ni notificaciones de Interpol vigentes.</p>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    {pdiCheckingRow.id === "102" ? (
+                      <button onClick={() => {
+                        updatePdiStatus(pdiCheckingRow.id, "Rechazado");
+                        toast.error(`🚨 PROTOCOLO DE DETENCIÓN PDI ACTIVADO. Oficiales en andén notificados para escoltar al pasajero.`);
+                        setPdiCheckingRow(null);
+                      }} className="col-span-2 bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-lg border-none text-xs cursor-pointer transition-colors shadow-lg uppercase font-mono animate-pulse">
+                        Activar Protocolo Detención 🚨
+                      </button>
+                    ) : (
+                      <>
+                        <button onClick={() => {
+                          updatePdiStatus(pdiCheckingRow.id, "Aprobado");
+                          toast.success(`✓ Pasaporte sellado. Ingreso de ${pdiCheckingRow.pasajero} aprobado por PDI.`);
+                          setPdiCheckingRow(null);
+                        }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg border-none text-xs cursor-pointer transition-colors shadow-sm">
+                          Sellar Pasaporte
+                        </button>
+                        <button onClick={() => {
+                          updatePdiStatus(pdiCheckingRow.id, "Rechazado");
+                          toast.warning(`⚠ Ingreso denegado para el pasajero ${pdiCheckingRow.pasajero} por PDI.`);
+                          setPdiCheckingRow(null);
+                        }} className="bg-red-600/30 hover:bg-red-600/40 text-red-300 border border-red-700 font-bold py-2.5 rounded-lg text-xs cursor-pointer transition-colors">
+                          Denegar Ingreso
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  <button onClick={() => setPdiCheckingRow(null)} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-lg border border-slate-700 text-xs cursor-pointer transition-colors mt-2">
+                    Cerrar Terminal
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SAG X-RAY MODAL */}
+      {sagXrayRow && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1b2b1e] rounded-2xl max-w-lg w-full shadow-2xl border border-emerald-800/80 overflow-hidden transform transition-all font-sans text-slate-200">
+            <div className="bg-[#111e15] px-6 py-4 flex items-center justify-between border-b border-emerald-950">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚡</span>
+                <h3 className="font-bold text-lg text-emerald-400 font-mono uppercase tracking-wide">Escáner X-Ray Fitosanitario SAG</h3>
+              </div>
+              <button onClick={() => setSagXrayRow(null)} className="text-slate-400 hover:text-white bg-transparent border-none text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {!xrayFinished ? (
+                <div className="space-y-4 text-center py-6">
+                  <div className="relative w-72 h-40 bg-[#0d160f] border-2 border-emerald-600/30 rounded-2xl mx-auto flex items-center justify-center overflow-hidden">
+                    <div className="w-60 h-32 border-4 border-amber-600/20 rounded bg-amber-600/5 relative flex items-center justify-around">
+                      <div className="w-12 h-20 bg-emerald-500/10 rounded-sm" />
+                      <div className="w-16 h-16 bg-blue-500/10 rounded-full" />
+                      <div className="w-8 h-12 bg-red-500/10 rounded-lg" />
+                    </div>
+                    <div className="absolute inset-x-0 h-1 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,1)] animate-bounce" style={{ animationDuration: '2s' }} />
+                  </div>
+                  <div className="w-full bg-[#122216] h-2 rounded-full overflow-hidden mt-4">
+                    <div className="bg-emerald-50 h-full rounded-full transition-all duration-250" style={{ width: `${xrayProgress}%` }} />
+                  </div>
+                  
+                  <div className="bg-[#0b140d] text-emerald-400 p-3 rounded border border-emerald-950 font-mono text-left text-xs h-24 overflow-y-auto space-y-1">
+                    <p className="opacity-60">{`[SYSTEM] Aligning luggage sensor arrays...`}</p>
+                    {xrayProgress >= 25 && <p>{`> Emitting fitosanitary high-density rays...`}</p>}
+                    {xrayProgress >= 50 && <p className="text-amber-400">{`> Warning: Bio-density anomaly in luggage compartment.`}</p>}
+                    {xrayProgress >= 75 && <p>{`> Cross-referencing declared organics list...`}</p>}
+                    {xrayProgress >= 100 && <p className="text-emerald-300">{`> Scan complete. Imaging finalized.`}</p>}
+                  </div>
+                  <p className="text-slate-400 text-xs font-mono">Calibración de Densidades Orgánicas - {xrayProgress}%</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative w-full h-44 bg-[#0d160f] border-2 border-emerald-500 rounded-xl flex flex-col justify-between p-4 overflow-hidden shadow-inner">
+                    <span className="text-[10px] text-emerald-500 font-mono uppercase tracking-wider block border-b border-emerald-950 pb-1">Análisis Digital de Equipaje: {sagXrayRow.declarante}</span>
+                    
+                    <div className="flex justify-around items-center py-4">
+                      {sagXrayRow.id === "201" ? (
+                        <>
+                          <div className="flex flex-col items-center gap-1 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-lg">
+                            <span className="text-4xl">🍏</span>
+                            <span className="text-[10px] text-amber-400 font-bold uppercase">Fruta Fresca</span>
+                          </div>
+                          <div className="flex flex-col items-center gap-1 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-lg">
+                            <span className="text-4xl">🌾</span>
+                            <span className="text-[10px] text-amber-400 font-bold uppercase">Semillas</span>
+                          </div>
+                        </>
+                      ) : sagXrayRow.id === "203" ? (
+                        <>
+                          <div className="flex flex-col items-center gap-1 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-lg">
+                            <span className="text-4xl">🪵</span>
+                            <span className="text-[10px] text-amber-400 font-bold uppercase">Madera Rustica</span>
+                          </div>
+                          <div className="flex flex-col items-center gap-1 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-lg">
+                            <span className="text-4xl">🌺</span>
+                            <span className="text-[10px] text-amber-400 font-bold uppercase">Flora Silvestre</span>
+                          </div>
+                        </>
+                      ) : sagXrayRow.id === "205" ? (
+                        <div className="flex flex-col items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-lg">
+                          <span className="text-4xl">🐱</span>
+                          <span className="text-[10px] text-emerald-400 font-bold uppercase">Mascota (Gato)</span>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 w-full">
+                          <span className="text-emerald-400 font-bold text-xs uppercase tracking-wide block">✓ Equipaje Limpio - Sin Anormalidades Biológicas</span>
+                          <span className="text-[10px] text-slate-400 block mt-1">Sólo ropa y objetos personales estándar</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <span className="text-[9px] text-[#00ff66] font-mono block text-right mt-1">SAG RF-07 SCANNER ENGINE v1.2</span>
+                  </div>
+
+                  <div className="bg-[#112015] rounded-xl p-4 border border-emerald-950 space-y-2 text-xs font-mono">
+                    <h5 className="font-bold text-emerald-400 uppercase tracking-wide font-sans text-xs">Comparación de Declaración Jurada:</h5>
+                    <div><span className="text-slate-400">Declarado Orgánicos:</span> <span className="font-bold text-slate-200">{sagXrayRow.organicosDeclarados}</span></div>
+                    <div><span className="text-slate-400">Declarado Mascotas:</span> <span className="font-bold text-slate-200">{sagXrayRow.mascotasDeclaradas}</span></div>
+                    
+                    <div className="border-t border-emerald-950 pt-2 mt-2">
+                      <span className="font-sans font-bold text-slate-300 block mb-1">Veredicto Fitosanitario:</span>
+                      {sagXrayRow.id === "201" || sagXrayRow.id === "203" ? (
+                        <p className="text-amber-400 font-sans">⚠️ RIESGO DETECTADO. El escáner biológico detectó material vegetal que representa riesgo fitosanitario no autorizado.</p>
+                      ) : (
+                        <p className="text-emerald-400 font-sans">✓ APTO PARA INGRESO. El contenido coincide con lo permitido y el registro del andén es adecuado.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <button onClick={() => {
+                      updateSagStatus(sagXrayRow.id, "Verificado SAG");
+                      toast.success(`✓ Declaración de ${sagXrayRow.declarante} aprobada y autorizada por SAG.`);
+                      setSagXrayRow(null);
+                    }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg border-none text-xs cursor-pointer transition-colors shadow-sm font-semibold">
+                      Aprobar e Ingresar
+                    </button>
+                    {(sagXrayRow.id === "201" || sagXrayRow.id === "203") ? (
+                      <button onClick={() => {
+                        updateSagStatus(sagXrayRow.id, "Retenido para revisión");
+                        toast.error(`🚨 Carga retenida por SAG para sanitización/destrucción. Acta de infracción emitida.`);
+                        setSagXrayRow(null);
+                      }} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg border-none text-xs cursor-pointer transition-colors shadow-sm font-semibold">
+                        Incautar y Retener 🍎
+                      </button>
+                    ) : (
+                      <button onClick={() => {
+                        updateSagStatus(sagXrayRow.id, "Retenido para revisión");
+                        toast.warning(`⚠ Declaración SAG retenida temporalmente para inspección física adicional.`);
+                        setSagXrayRow(null);
+                      }} className="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-lg border-none text-xs cursor-pointer transition-colors shadow-sm font-semibold">
+                        Retener Carga
+                      </button>
+                    )}
+                  </div>
+
+                  <button onClick={() => setSagXrayRow(null)} className="w-full bg-[#16241a] hover:bg-[#203425] text-slate-300 font-bold py-2 rounded-lg border border-emerald-900/60 text-xs cursor-pointer transition-colors mt-2">
+                    Cerrar Escáner
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── INSPECCIÓN ───────────────────────────────────────────────────
-function InspeccionScreen({ patente, onBack, onNavigate, onLogout }: {
+function InspeccionScreen({ patente, onBack, onNavigate, onLogout, officerRole, setOfficerRole }: {
   patente: string; onBack: () => void; onNavigate: (view: View) => void; onLogout: () => void;
+  officerRole: "aduana" | "pdi" | "sag" | "admin";
+  setOfficerRole: (role: "aduana" | "pdi" | "sag" | "admin") => void;
 }) {
-  const [activeTab, setActiveTab] = useState<"vehiculo" | "acompanantes" | "sag" | "pdi">("vehiculo");
+  const getAllowedTabs = () => {
+    switch (officerRole) {
+      case "aduana":
+        return [{ key: "vehiculo" as const, label: "Datos del Vehículo" }];
+      case "pdi":
+        return [
+          { key: "acompanantes" as const, label: "Acompañantes/Menores" },
+          { key: "pdi" as const, label: "Control PDI" }
+        ];
+      case "sag":
+        return [{ key: "sag" as const, label: "Declaración SAG" }];
+      case "admin":
+      default:
+        return [
+          { key: "vehiculo" as const, label: "Datos del Vehículo" },
+          { key: "acompanantes" as const, label: "Acompañantes/Menores" },
+          { key: "sag" as const, label: "Declaración SAG" },
+          { key: "pdi" as const, label: "Control PDI" }
+        ];
+    }
+  };
+
+  const tabs = getAllowedTabs();
+  const initialTab = tabs[0]?.key || "vehiculo";
+  const [activeTab, setActiveTab] = useState<"vehiculo" | "acompanantes" | "sag" | "pdi">(initialTab);
   const [result, setResult] = useState<"pending" | "aprobado" | "retenido" | "derivado">("pending");
+
+  useEffect(() => {
+    const currentTabs = getAllowedTabs();
+    setActiveTab(currentTabs[0]?.key || "vehiculo");
+  }, [officerRole]);
+
+  // State elements for interactive checking
+  const [cargoChecked, setCargoChecked] = useState(false);
+  const [chasisChecked, setChasisChecked] = useState(false);
+  
+  const [notaryQueryRun, setNotaryQueryRun] = useState(false);
+  const [minorChecked, setMinorChecked] = useState(false);
+  const [pdiMigchecked, setPdiMigchecked] = useState(false);
+
+  const [sagBagChecked, setSagBagChecked] = useState(false);
+  const [sagNoProdChecked, setSagNoProdChecked] = useState(false);
+  const [sagPetChecked, setSagPetChecked] = useState(false);
+
+  const [pdiBackgroundRun, setPdiBackgroundRun] = useState(false);
+  const [pdiBackgroundChecked, setPdiBackgroundChecked] = useState(false);
 
   function handleAction(action: "aprobado" | "retenido" | "derivado") {
     setResult(action);
-    const msgs = { aprobado: "✓ Tránsito aprobado. Paso autorizado.", retenido: "⚠ Vehículo retenido para inspección física.", derivado: "→ Caso derivado a unidad especializada." };
+    const msgs = {
+      aprobado: `✓ Tránsito aprobado. Firma digital de ${officerRole.toUpperCase()} registrada.`,
+      retenido: `⚠ Vehículo retenido por orden de ${officerRole.toUpperCase()}.`,
+      derivado: `→ Caso derivado a segunda línea por ${officerRole.toUpperCase()}.`
+    };
     toast[action === "aprobado" ? "success" : action === "retenido" ? "warning" : "info"](msgs[action]);
   }
 
-  const tabs = [
-    { key: "vehiculo" as const, label: "Datos del Vehículo" },
-    { key: "acompanantes" as const, label: "Acompañantes/Menores" },
-    { key: "sag" as const, label: "Declaración SAG" },
-    { key: "pdi" as const, label: "Control PDI" },
-  ];
+  const isReadOnly = (tabKey: string) => {
+    if (officerRole === "admin") return false;
+    if (officerRole === "aduana") return tabKey !== "vehiculo";
+    if (officerRole === "pdi") return tabKey !== "acompanantes" && tabKey !== "pdi";
+    if (officerRole === "sag") return tabKey !== "sag";
+    return true;
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
       <Toaster richColors />
-      <OfficerHeader active="inspeccion" onNavigate={onNavigate} onLogout={onLogout} />
+      <OfficerHeader active="inspeccion" onNavigate={onNavigate} onLogout={onLogout} officerRole={officerRole} setOfficerRole={setOfficerRole} />
 
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-6 flex flex-col gap-6">
         <div className="flex items-end justify-between">
@@ -1984,49 +2977,91 @@ function InspeccionScreen({ patente, onBack, onNavigate, onLogout }: {
               <div className="bg-[#f5f3f7] border-b border-[#c5c6cf] flex">
                 {tabs.map(t => (
                   <button key={t.key} onClick={() => setActiveTab(t.key)}
-                    className={`px-6 py-4 text-base transition-colors ${activeTab === t.key ? "font-normal text-black border-b-2 border-black" : "text-[#44474e] hover:text-black"}`}>
+                    className={`px-6 py-4 text-sm transition-colors relative flex items-center gap-1.5 ${activeTab === t.key ? "font-bold text-black border-b-2 border-black" : "text-[#44474e] hover:text-black"}`}>
                     {t.label}
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${isReadOnly(t.key) ? "bg-gray-200 text-gray-500" : "bg-blue-100 text-blue-700"}`}>
+                      {isReadOnly(t.key) ? "L" : "E"}
+                    </span>
                   </button>
                 ))}
               </div>
               <div className="p-8">
+                {isReadOnly(activeTab) ? (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 mb-6 flex items-center justify-between text-xs text-gray-600">
+                    <span>🔒 VISTA DE LECTURA INTEGRADA: Módulo verificado por el organismo responsable (RF-04).</span>
+                    <span className="font-bold uppercase bg-gray-200 text-gray-700 px-2 py-0.5 rounded">VERIFICADO</span>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 mb-6 flex items-center justify-between text-xs text-blue-700">
+                    <span>📝 ACCIÓN DE SU COMPETENCIA: Su rol tiene privilegios de firma y validación sobre este módulo.</span>
+                    <span className="font-bold uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded">EDICIÓN</span>
+                  </div>
+                )}
+
                 {activeTab === "vehiculo" && (
-                  <div className="flex gap-8">
-                    <div className="space-y-5 w-64">
-                      <div>
-                        <p className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">PATENTE (PLACA)</p>
-                        <p className="text-5xl font-bold text-black tracking-tight mt-1">{patente || "AA-BB-12"}</p>
-                        <div className="flex items-center gap-1 mt-2 bg-[#dcfce7] px-2 py-0.5 rounded w-fit">
-                          <div className="w-2 h-2 bg-[#16a34a] rounded-full" />
-                          <span className="text-xs font-bold text-[#166534]">SIN ENCARGO POR ROBO</span>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-[#44474e]">Marca / Modelo</p>
-                        <p className="font-semibold text-[#1b1b1e] text-xl mt-1">Toyota Hilux 2024</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-[#44474e]">Propietario</p>
-                        <div className="bg-[#f5f3f7] border border-[#c5c6cf] rounded-lg p-3 flex items-center gap-3 mt-2">
-                          <div className="bg-white shadow-sm h-10 w-9 rounded flex items-center justify-center text-base shrink-0">👤</div>
-                          <div>
-                            <p className="font-bold text-[#1b1b1e] text-sm">Ricardo Fuentes Silva</p>
-                            <p className="text-[#44474e] text-xs">RUT: 15.662.339-K</p>
+                  <div>
+                    <div className="flex gap-8">
+                      <div className="space-y-5 w-64">
+                        <div>
+                          <p className="text-xs font-bold text-[#44474e] uppercase tracking-[0.5px]">PATENTE (PLACA)</p>
+                          <p className="text-5xl font-bold text-black tracking-tight mt-1">{patente || "AA-BB-12"}</p>
+                          <div className="flex items-center gap-1 mt-2 bg-[#dcfce7] px-2 py-0.5 rounded w-fit">
+                            <div className="w-2 h-2 bg-[#16a34a] rounded-full" />
+                            <span className="text-xs font-bold text-[#166534]">SIN ENCARGO POR ROBO</span>
                           </div>
-                          <span className="ml-auto text-[#16a34a]">✓</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-[#44474e]">Marca / Modelo</p>
+                          <p className="font-semibold text-[#1b1b1e] text-xl mt-1">Toyota Hilux 2024</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-[#44474e]">Propietario</p>
+                          <div className="bg-[#f5f3f7] border border-[#c5c6cf] rounded-lg p-3 flex items-center gap-3 mt-2">
+                            <div className="bg-white shadow-sm h-10 w-9 rounded flex items-center justify-center text-base shrink-0">👤</div>
+                            <div>
+                              <p className="font-bold text-[#1b1b1e] text-sm">Ricardo Fuentes Silva</p>
+                              <p className="text-[#44474e] text-xs">RUT: 15.662.339-K</p>
+                            </div>
+                            <span className="ml-auto text-[#16a34a]">✓</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-1 relative flex flex-col gap-4">
+                        <div className="rounded-xl overflow-hidden h-56">
+                          <img src={imgVehiclePhoto} alt="Vehículo" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex gap-2">
+                          {["Vista Frontal","Motor (Chasis)"].map(l => (
+                            <span key={l} className="bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">{l}</span>
+                          ))}
                         </div>
                       </div>
                     </div>
-                    <div className="flex-1 relative">
-                      <div className="rounded-xl overflow-hidden h-72">
-                        <img src={imgVehiclePhoto} alt="Vehículo" className="w-full h-full object-cover" />
+
+                    {!isReadOnly("vehiculo") && (
+                      <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
+                        <h4 className="font-bold text-sm text-black">Inspección de Aduanas (SNA)</h4>
+                        <div className="space-y-3">
+                          <label className="flex items-center gap-3 text-sm text-[#1b1b1e] cursor-pointer">
+                            <input type="checkbox" checked={chasisChecked} onChange={e => setChasisChecked(e.target.checked)} className="w-4 h-4 accent-black" />
+                            <span>Confirmar coincidencia física de patente y chasis (VIN) (RF-02)</span>
+                          </label>
+                          <label className="flex items-center gap-3 text-sm text-[#1b1b1e] cursor-pointer">
+                            <input type="checkbox" checked={cargoChecked} onChange={e => setCargoChecked(e.target.checked)} className="w-4 h-4 accent-black" />
+                            <span>Registrar control documental de carga y sellos de equipaje (Trazabilidad - RF-16)</span>
+                          </label>
+                        </div>
+                        <div className="bg-[#fff7ed] border border-[#ffedd5] p-3.5 rounded-lg text-xs text-[#9a3412] mt-3">
+                          <strong>Alerta de Plazos Legales (RF-06):</strong> Vehículo registrado en admisión temporal. Plazo de vigencia configurado para 90 días desde el ingreso.
+                        </div>
+                        <button onClick={() => {
+                          if (chasisChecked && cargoChecked) toast.success("Inspección de vehículo firmada localmente.");
+                          else toast.error("Por favor complete todas las verificaciones.");
+                        }} className="bg-black text-white text-xs font-bold px-4 py-2 rounded uppercase tracking-wider hover:bg-gray-800">
+                          Firmar Validación Vehicular (SNA)
+                        </button>
                       </div>
-                      <div className="absolute bottom-4 left-4 flex gap-2">
-                        {["Vista Frontal","Motor (Chasis)"].map(l => (
-                          <span key={l} className="bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">{l}</span>
-                        ))}
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
                 {activeTab === "acompanantes" && (
@@ -2039,44 +3074,120 @@ function InspeccionScreen({ patente, onBack, onNavigate, onLogout }: {
                     <div className="flex gap-4 flex-wrap">
                       {[
                         { name: "Elena Silva Roa", rut: "16.221.002-4", role: "Cónyuge", status: "✓ VALIDADO CIVIL", statusColor: "text-[#16a34a]", minor: false },
-                        { name: "Tomás Fuentes S.", rut: "24.110.887-1", role: "Menor", status: "✓ Validación Notarial OK", statusColor: "text-[#16a34a]", minor: true },
+                        { name: "Tomás Fuentes S.", rut: "24.110.887-1", role: "Menor", status: notaryQueryRun ? "✓ VALIDACIÓN NOTARIAL OK" : "⚠ REQUIERE VALIDACIÓN NOTARIAL", statusColor: notaryQueryRun ? "text-[#16a34a]" : "text-amber-600", minor: true },
                       ].map(p => (
                         <div key={p.rut} className={`border border-[#c5c6cf] rounded-lg p-4 flex gap-4 w-72 ${p.minor ? "bg-[rgba(8,27,59,0.03)] border-l-4" : ""}`}>
                           <div className="bg-[#f0edf1] rounded w-14 h-14 shrink-0 flex items-center justify-center text-2xl">{p.minor ? "👦" : "👤"}</div>
                           <div>
-                            <p className="font-bold text-[#1b1b1e]">{p.name}</p>
-                            <p className="text-[#44474e] text-sm">{p.rut}</p>
+                            <p className="font-bold text-[#1b1b1e] text-sm">{p.name}</p>
+                            <p className="text-[#44474e] text-xs">{p.rut}</p>
                             <Badge color={p.minor ? "red" : "gray"} label={p.role} />
                             <p className={`text-xs font-bold mt-1.5 ${p.statusColor}`}>{p.status}</p>
                           </div>
                         </div>
                       ))}
                     </div>
+
+                    {!isReadOnly("acompanantes") && (
+                      <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
+                        <h4 className="font-bold text-sm text-black">Control de Menores y Filiación (PDI)</h4>
+                        <div className="space-y-3">
+                          <div className="flex gap-3">
+                            <button onClick={() => {
+                              setNotaryQueryRun(true);
+                              toast.success("Consulta exitosa a Notarías: Permiso Notarial #992834-V Validado en línea (RF-13).");
+                            }} className="bg-blue-600 text-white text-xs font-bold px-4 py-2.5 rounded hover:bg-blue-700">
+                              Consultar Permisos Notariales en Línea (RF-13)
+                            </button>
+                          </div>
+                          {notaryQueryRun && (
+                            <div className="bg-[#f0fdf4] border border-[#bbf7d0] p-4 rounded-lg text-xs text-[#166534] space-y-1 animate-fade-in">
+                              <p><strong>Permiso Encontrado:</strong> Escritura Pública #22894-2026</p>
+                              <p><strong>Otorgante:</strong> Elena Silva Roa (Madre)</p>
+                              <p><strong>Menor:</strong> Tomás Fuentes Silva</p>
+                              <p><strong>Estado:</strong> FIRMADO Y AUTORIZADO</p>
+                            </div>
+                          )}
+                          <label className="flex items-center gap-3 text-sm text-[#1b1b1e] cursor-pointer pt-2">
+                            <input type="checkbox" checked={minorChecked} onChange={e => setMinorChecked(e.target.checked)} className="w-4 h-4 accent-black" />
+                            <span>Validar filiación de Tomás Fuentes Silva y autorizaciones físicas (RF-01)</span>
+                          </label>
+                          <label className="flex items-center gap-3 text-sm text-[#1b1b1e] cursor-pointer">
+                            <input type="checkbox" checked={pdiMigchecked} onChange={e => setPdiMigchecked(e.target.checked)} className="w-4 h-4 accent-black" />
+                            <span>Registrar control migratorio de pasajeros en sistema central PDI</span>
+                          </label>
+                        </div>
+                        <button onClick={() => {
+                          if (minorChecked && pdiMigchecked && notaryQueryRun) toast.success("Filiación y control migratorio firmado por PDI.");
+                          else toast.error("Debe consultar en línea y marcar todas las verificaciones.");
+                        }} className="bg-black text-white text-xs font-bold px-4 py-2 rounded uppercase tracking-wider hover:bg-gray-800">
+                          Firmar Aprobación Migratoria (PDI)
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
                 {activeTab === "sag" && (
-                  <div className="max-w-xs">
+                  <div>
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">🌿</span>
                       <h3 className="font-semibold text-[#1b1b1e] text-xl">Declaración SAG</h3>
                     </div>
                     <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg p-4 mb-4">
-                      <p className="font-medium text-[#166534] text-sm">Declaración Digital #SG-9092 enviada satisfactoriamente.</p>
+                      <p className="font-medium text-[#166534] text-sm">Declaración Digital #SG-9092 enviada satisfactoriamente (RF-07).</p>
                       <p className="text-[#15803d] text-xs uppercase mt-1">SIN PRODUCTOS DE ORIGEN VEGETAL/ANIMAL.</p>
                     </div>
-                    <button onClick={() => toast.info("Generando PDF de declaración SAG...")}
-                      className="w-full border border-[#c5c6cf] rounded py-2 text-[#44474e] text-sm flex items-center justify-center gap-2 hover:bg-gray-50">
-                      📄 Ver PDF Declaración
-                    </button>
+                    
+                    {/* Sección Mascotas (RF-12) */}
+                    <div className="border border-[#c5c6cf] rounded-xl p-4 mb-4">
+                      <h4 className="font-bold text-sm text-black flex items-center gap-2 mb-2">
+                        <span>🐾</span> Registro de Mascotas (RF-12)
+                      </h4>
+                      <p className="text-xs text-[#44474e] mb-3">Mascota declarada: Perro "Pug", chip Nro: 900123456789.</p>
+                      <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg text-xs text-blue-700">
+                        <strong>Certificado Sanitario SAG:</strong> Validado con el Servicio de origen (SENASA). Vacunas al día.
+                      </div>
+                    </div>
+
+                    {!isReadOnly("sag") ? (
+                      <div className="space-y-4 pt-4 border-t border-gray-100">
+                        <h4 className="font-bold text-sm text-black">Verificaciones Fitosanitarias y Mascotas (SAG)</h4>
+                        <div className="space-y-3">
+                          <label className="flex items-center gap-3 text-sm text-[#1b1b1e] cursor-pointer">
+                            <input type="checkbox" checked={sagBagChecked} onChange={e => setSagBagChecked(e.target.checked)} className="w-4 h-4 accent-black" />
+                            <span>Inspección física de equipaje y maletero completada</span>
+                          </label>
+                          <label className="flex items-center gap-3 text-sm text-[#1b1b1e] cursor-pointer">
+                            <input type="checkbox" checked={sagNoProdChecked} onChange={e => setSagNoProdChecked(e.target.checked)} className="w-4 h-4 accent-black" />
+                            <span>Verificar ausencia de frutas, semillas o productos fitosanitarios restringidos (RF-07)</span>
+                          </label>
+                          <label className="flex items-center gap-3 text-sm text-[#1b1b1e] cursor-pointer">
+                            <input type="checkbox" checked={sagPetChecked} onChange={e => setSagPetChecked(e.target.checked)} className="w-4 h-4 accent-black" />
+                            <span>Verificar microchip y vacunas de mascota declarada (RF-12)</span>
+                          </label>
+                        </div>
+                        <button onClick={() => {
+                          if (sagBagChecked && sagNoProdChecked && sagPetChecked) toast.success("Control fitosanitario e inspección de mascotas firmada por SAG.");
+                          else toast.error("Por favor complete todas las verificaciones SAG.");
+                        }} className="bg-black text-white text-xs font-bold px-4 py-2 rounded uppercase tracking-wider hover:bg-gray-800">
+                          Firmar Aprobación SAG
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => toast.info("Generando PDF de declaración SAG...")}
+                        className="w-full border border-[#c5c6cf] rounded py-2 text-[#44474e] text-sm flex items-center justify-center gap-2 hover:bg-gray-50">
+                        📄 Ver PDF Declaración
+                      </button>
+                    )}
                   </div>
                 )}
                 {activeTab === "pdi" && (
-                  <div className="max-w-xs">
+                  <div>
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">🔵</span>
                       <h3 className="font-semibold text-[#1b1b1e] text-xl">Control PDI</h3>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-3 mb-6">
                       {[{ label: "Arraigos / Alertas", value: "SIN ALERTAS", ok: true }, { label: "Control Migratorio", value: "HABILITADO", ok: true }].map(row => (
                         <div key={row.label} className="flex items-center justify-between py-3 border-b border-[#c5c6cf]">
                           <span className="text-[#44474e] text-sm">{row.label}</span>
@@ -2084,6 +3195,37 @@ function InspeccionScreen({ patente, onBack, onNavigate, onLogout }: {
                         </div>
                       ))}
                     </div>
+
+                    {!isReadOnly("pdi") && (
+                      <div className="space-y-4 pt-4 border-t border-gray-100">
+                        <h4 className="font-bold text-sm text-black">Verificación de Antecedentes (PDI)</h4>
+                        <button onClick={() => {
+                          setPdiBackgroundRun(true);
+                          toast.success("Consulta de antecedentes policiales e Interpol ejecutada con éxito (RF-04).");
+                        }} className="bg-blue-600 text-white text-xs font-bold px-4 py-2.5 rounded hover:bg-blue-700">
+                          Consultar Base de Datos Policial (RF-04)
+                        </button>
+                        {pdiBackgroundRun && (
+                          <div className="bg-[#f0edf1] p-3.5 rounded-lg space-y-2 text-xs text-[#1b1b1e]">
+                            <p className="flex items-center justify-between"><span>RUT 15.662.339-K (Conductor):</span> <span className="font-bold text-[#16a34a]">HABILITADO / SIN ORDEN</span></p>
+                            <p className="flex items-center justify-between"><span>RUT 16.221.002-4 (Elena Silva):</span> <span className="font-bold text-[#16a34a]">HABILITADO / SIN ORDEN</span></p>
+                            <p className="flex items-center justify-between"><span>Interpol Red Alert check:</span> <span className="font-bold text-[#16a34a]">CLEAN</span></p>
+                          </div>
+                        )}
+                        <div className="pt-2">
+                          <label className="flex items-center gap-3 text-sm text-[#1b1b1e] cursor-pointer">
+                            <input type="checkbox" checked={pdiBackgroundChecked} onChange={e => setPdiBackgroundChecked(e.target.checked)} className="w-4 h-4 accent-black" />
+                            <span>Confirmar verificación de antecedentes e Interpol (RF-04)</span>
+                          </label>
+                        </div>
+                        <button onClick={() => {
+                          if (pdiBackgroundChecked && pdiBackgroundRun) toast.success("Verificación de antecedentes firmada por PDI.");
+                          else toast.error("Debe ejecutar la consulta de antecedentes y marcar la verificación.");
+                        }} className="bg-black text-white text-xs font-bold px-4 py-2 rounded uppercase tracking-wider hover:bg-gray-800">
+                          Firmar Antecedentes PDI
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2139,14 +3281,14 @@ const AUDIT_ROWS = [
   { ts: "2023-10-27\n14:05:44.221", user: "k_morales_adm", module: "RF-15 Fronteras", action: "Cierre de turno - Paso Los Libertadores", ip: "10.0.2.45", result: "APROBADO" as const },
 ];
 
-function AuditoriaScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => void; onLogout: () => void }) {
+function AuditoriaScreen({ onNavigate, onLogout, officerRole, setOfficerRole }: { onNavigate: (view: View) => void; onLogout: () => void; officerRole: "aduana" | "pdi" | "sag" | "admin"; setOfficerRole: (role: "aduana" | "pdi" | "sag" | "admin") => void }) {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const resultColor = { "APROBADO": "green", "BLOQUEADO": "red", "ALERTA": "orange" } as const;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
       <Toaster richColors />
-      <OfficerHeader active="auditoria" onNavigate={onNavigate} onLogout={onLogout} />
+      <OfficerHeader active="auditoria" onNavigate={onNavigate} onLogout={onLogout} officerRole={officerRole} setOfficerRole={setOfficerRole} />
 
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-8 flex flex-col gap-6">
         <div className="flex items-end justify-between">
@@ -2342,24 +3484,28 @@ type SiafUser = {
   status: string;
 };
 
-function UsuariosScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => void; onLogout: () => void }) {
+function UsuariosScreen({ onNavigate, onLogout, officerRole, setOfficerRole }: { onNavigate: (view: View) => void; onLogout: () => void; officerRole: "aduana" | "pdi" | "sag" | "admin"; setOfficerRole: (role: "aduana" | "pdi" | "sag" | "admin") => void }) {
   const [users, setUsers] = useState<SiafUser[]>([
     { id: "1", name: "Ariel Catalán", rut: "12.345.678-9", email: "ariel.catalan@siaf.cl", role: "Ciudadano", status: "Activo" },
     { id: "2", name: "Vicente Orellana", rut: "18.765.432-1", email: "v.orellana@aduana.cl", role: "Funcionario", status: "Activo" },
     { id: "3", name: "Diego Rebaza", rut: "15.987.654-3", email: "d.rebaza@pdi.cl", role: "Funcionario", status: "Activo" },
     { id: "4", name: "Joshua Reyes", rut: "16.321.654-K", email: "j.reyes@sag.cl", role: "Funcionario", status: "Inactivo" },
-    { id: "5", name: "Cindy Contador", rut: "11.222.333-4", email: "cindy.contador@siaf.cl", role: "Administrador", status: "Activo" },
+    { id: "5", name: "Soporte Técnico SIAF", rut: "9.999.999-9", email: "soporte@siaf.cl", role: "Administrador", status: "Activo" },
   ]);
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState<SiafUser | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
-
-  // Edit user form fields:
   const [editName, setEditName] = useState("");
   const [editRut, setEditRut] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editStatus, setEditStatus] = useState("");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newRut, setNewRut] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState("Funcionario");
+  const [newStatus, setNewStatus] = useState("Activo");
 
   const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -2387,10 +3533,33 @@ function UsuariosScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => 
     toast.success("Usuario actualizado correctamente.");
   }
 
+  function handleCreate() {
+    if (!newName.trim() || !newRut.trim() || !newEmail.trim()) {
+      toast.error("Por favor complete todos los campos obligatorios.");
+      return;
+    }
+    const newUser: SiafUser = {
+      id: String(users.length + 1),
+      name: newName,
+      rut: newRut,
+      email: newEmail,
+      role: newRole,
+      status: newStatus
+    };
+    setUsers(prev => [...prev, newUser]);
+    setIsCreateOpen(false);
+    setNewName("");
+    setNewRut("");
+    setNewEmail("");
+    setNewRole("Funcionario");
+    setNewStatus("Activo");
+    toast.success(`Usuario funcionario ${newName} creado con éxito (RF-20).`);
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
       <Toaster richColors />
-      <OfficerHeader active="usuarios" onNavigate={onNavigate} onLogout={onLogout} />
+      <OfficerHeader active="usuarios" onNavigate={onNavigate} onLogout={onLogout} officerRole={officerRole} setOfficerRole={setOfficerRole} />
 
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-8 flex flex-col gap-6">
         <div className="flex items-end justify-between">
@@ -2399,8 +3568,12 @@ function UsuariosScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => 
             <p className="text-[#545f72] text-base mt-1">Administración de credenciales, roles y accesos institucionales.</p>
           </div>
           <div className="flex gap-3">
+            <button onClick={() => setIsCreateOpen(true)}
+              className="bg-black text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border-none">
+              ➕ Crear Funcionario
+            </button>
             <button onClick={() => setIsExportOpen(true)}
-              className="bg-black text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border-none">
+              className="bg-white text-black border border-[#c5c6cf] px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm hover:bg-gray-50 transition-colors cursor-pointer">
               📥 Exportar Listado
             </button>
           </div>
@@ -2471,19 +3644,19 @@ function UsuariosScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => 
 
       {/* Edit User Modal */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[90] backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] backdrop-blur-sm">
           <div className="bg-white rounded-xl max-w-md w-full p-6 border border-[#c5c6cf] shadow-xl flex flex-col gap-4 animate-in fade-in zoom-in duration-200">
-            <h3 className="font-semibold text-lg text-black">Editar Perfil de Usuario</h3>
-            <div className="flex flex-col gap-3.5">
+            <h3 className="font-bold text-lg text-black">Editar Usuario</h3>
+            <div className="flex flex-col gap-3">
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">Nombre Completo *</label>
-                <input value={editName} onChange={e => setEditName(e.target.value)}
+                <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
                   className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black" />
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">RUT *</label>
-                <input value={editRut} onChange={e => setEditRut(e.target.value)}
-                  className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black font-mono" />
+                <input type="text" value={editRut} onChange={e => setEditRut(e.target.value)}
+                  className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black" />
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">Correo Electrónico *</label>
@@ -2520,6 +3693,62 @@ function UsuariosScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => 
         </div>
       )}
 
+      {/* Create User Modal */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] backdrop-blur-sm">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 border border-[#c5c6cf] shadow-xl flex flex-col gap-4 animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center border-b pb-2 border-gray-100">
+              <h3 className="font-bold text-lg text-black">Crear Cuenta de Funcionario</h3>
+              <button onClick={() => setIsCreateOpen(false)} className="text-gray-500 hover:text-black font-bold text-lg border-none bg-transparent cursor-pointer">✕</button>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Nombre Completo *</label>
+                <input type="text" value={newName} onChange={e => setNewName(e.target.value)}
+                  placeholder="Ej: Juan Valenzuela"
+                  className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">RUT Funcionario *</label>
+                <input type="text" value={newRut} onChange={e => setNewRut(e.target.value)}
+                  placeholder="Ej: 15.987.654-3"
+                  className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Correo Institucional *</label>
+                <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
+                  placeholder="Ej: j.valenzuela@aduana.cl"
+                  className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-gray-700 block mb-1">Perfil de Acceso</label>
+                  <select value={newRole} onChange={e => setNewRole(e.target.value)}
+                    className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black">
+                    <option value="Funcionario">Funcionario</option>
+                    <option value="Administrador">Administrador</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-700 block mb-1">Estado de la Cuenta</label>
+                  <select value={newStatus} onChange={e => setNewStatus(e.target.value)}
+                    className="w-full bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black">
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t pt-4 border-gray-100 mt-2">
+              <button onClick={() => setIsCreateOpen(false)}
+                className="px-4 py-2 border border-[#c5c6cf] rounded-lg text-sm text-[#44474e] hover:bg-gray-50">Cancelar</button>
+              <button onClick={handleCreate}
+                className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800">Crear Usuario</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} onConfirm={(fmt) => {
         setIsExportOpen(false);
         toast.success(`Listado de usuarios exportado en formato ${fmt.toUpperCase()} con éxito.`);
@@ -2529,14 +3758,47 @@ function UsuariosScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => 
 }
 
 // ─── GENERACIÓN DE REPORTES ───────────────────────────────────────
-function ReportesScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => void; onLogout: () => void }) {
-  const [reportType, setReportType] = useState("transitos");
+function ReportesScreen({ onNavigate, onLogout, officerRole, setOfficerRole }: { onNavigate: (view: View) => void; onLogout: () => void; officerRole: "aduana" | "pdi" | "sag" | "admin"; setOfficerRole: (role: "aduana" | "pdi" | "sag" | "admin") => void }) {
+  const getAllowedReportTypes = () => {
+    switch (officerRole) {
+      case "aduana":
+        return [
+          { value: "transitos", label: "Tránsitos por Tipo de Vehículo (SNA)" },
+          { value: "inspecciones", label: "Inspecciones de Carga y Andén (SNA)" },
+        ];
+      case "pdi":
+        return [
+          { value: "alertas", label: "Alertas de Riesgo y Control Migratorio (PDI)" },
+        ];
+      case "sag":
+        return [
+          { value: "sag", label: "Declaraciones Sanitarias Silvoagropecuarias (SAG)" },
+        ];
+      case "admin":
+      default:
+        return [
+          { value: "transitos", label: "Tránsitos por Tipo de Vehículo (SNA)" },
+          { value: "inspecciones", label: "Inspecciones de Carga y Andén (SNA)" },
+          { value: "alertas", label: "Alertas de Riesgo y Control Migratorio (PDI)" },
+          { value: "sag", label: "Declaraciones Sanitarias Silvoagropecuarias (SAG)" },
+        ];
+    }
+  };
+
+  const allowedTypes = getAllowedReportTypes();
+  const [reportType, setReportType] = useState(allowedTypes[0]?.value || "transitos");
   const [dateDesde, setDateDesde] = useState("2026-06-01");
   const [dateHasta, setDateHasta] = useState("2026-06-22");
   const [paso, setPaso] = useState("todos");
   const [generatedData, setGeneratedData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+
+  useEffect(() => {
+    const types = getAllowedReportTypes();
+    setReportType(types[0]?.value || "transitos");
+    setGeneratedData(null);
+  }, [officerRole]);
 
   function handleGenerate() {
     setLoading(true);
@@ -2558,7 +3820,7 @@ function ReportesScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => 
         ] : reportType === "alertas" ? [
           { label: "Rojo (Crítico - Placa Encargo Robo)", count: 12, pct: "14%" },
           { label: "Naranja (Menores sin autorización notarial)", count: 32, pct: "38%" },
-          { label: "Amarillo (Discrepancia datos declarados)", count: 40, pct: "48%" },
+          { label: "Amarillo (Discrepancia DNI extranjero)", count: 40, pct: "48%" },
         ] : reportType === "inspecciones" ? [
           { label: "Aprobados en Andén Primario", count: 850, pct: "92%" },
           { label: "Retenidos para control", count: 45, pct: "5%" },
@@ -2576,7 +3838,7 @@ function ReportesScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf8fc]" style={{ fontFamily: "Inter,sans-serif" }}>
       <Toaster richColors />
-      <OfficerHeader active="reportes" onNavigate={onNavigate} onLogout={onLogout} />
+      <OfficerHeader active="reportes" onNavigate={onNavigate} onLogout={onLogout} officerRole={officerRole} setOfficerRole={setOfficerRole} />
 
       <main className="flex-1 max-w-[1280px] mx-auto w-full px-10 py-8 flex flex-col gap-6">
         <div>
@@ -2589,10 +3851,9 @@ function ReportesScreen({ onNavigate, onLogout }: { onNavigate: (view: View) => 
             <label className="text-xs font-bold text-gray-700 mb-1.5">Tipo de Reporte *</label>
             <select value={reportType} onChange={e => { setReportType(e.target.value); setGeneratedData(null); }}
               className="bg-white border border-[#c5c6cf] rounded-lg px-3 py-2 text-sm text-[#1b1b1e] outline-none focus:border-black">
-              <option value="transitos">Tránsitos por Tipo de Vehículo</option>
-              <option value="alertas">Alertas de Riesgo Detectadas</option>
-              <option value="inspecciones">Inspecciones de Andén</option>
-              <option value="sag">Declaraciones Sanitarias SAG</option>
+              {getAllowedReportTypes().map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
             </select>
           </div>
 
@@ -2689,6 +3950,9 @@ export default function App() {
   const [hasPets, setHasPets] = useState(false);
   const [inspectPatente, setInspectPatente] = useState("");
 
+  const [officerRole, setOfficerRole] = useState<"aduana" | "pdi" | "sag" | "admin">("aduana");
+  const [userCountry, setUserCountry] = useState("Chile");
+
   // Nuevos estados para los trámites extendidos
   const [tipoTramite, setTipoTramite] = useState<"vehiculo" | "sag" | "mascotas" | "mercancias">("vehiculo");
   const [sagVegetal, setSagVegetal] = useState(false);
@@ -2715,11 +3979,19 @@ export default function App() {
     };
   }, []);
 
-  function handleLogin(type: UserType, rut: string) {
+  function handleLogin(type: UserType, rut: string, role?: "aduana" | "pdi" | "sag" | "admin", country?: string) {
     setUserType(type);
     setUserName(rut === "12.345.678-9" ? "Juan Pérez" : rut);
-    if (type === "funcionario") setView("panel");
-    else setView("dashboard");
+    if (country) {
+      setUserCountry(country);
+      setVehicle(prev => ({ ...prev, pais: country }));
+    }
+    if (type === "funcionario") {
+      if (role) setOfficerRole(role);
+      setView("panel");
+    } else {
+      setView("dashboard");
+    }
   }
 
   return (
@@ -2733,7 +4005,7 @@ export default function App() {
         />
       )}
       {view === "clave-unica" && (
-        <ClaveUnicaScreen onComplete={() => handleLogin("ciudadano", "12.345.678-9")} />
+        <ClaveUnicaScreen onComplete={() => handleLogin("ciudadano", "12.345.678-9", undefined, "Chile")} />
       )}
       {view === "recuperar" && (
         <RecuperarScreen onBack={() => setView("login")} />
@@ -2753,6 +4025,7 @@ export default function App() {
             setView(targetView);
           }}
           onLogout={() => setView("login")}
+          userCountry={userCountry}
         />
       )}
       {view === "vehiculo" && (
@@ -2829,6 +4102,8 @@ export default function App() {
           onInspect={(id, patente) => { setInspectPatente(patente); setView("inspeccion"); }}
           onNavigate={(targetView) => setView(targetView)}
           onLogout={() => setView("login")}
+          officerRole={officerRole}
+          setOfficerRole={setOfficerRole}
         />
       )}
       {view === "inspeccion" && (
@@ -2837,16 +4112,33 @@ export default function App() {
           onBack={() => setView("panel")}
           onNavigate={(targetView) => setView(targetView)}
           onLogout={() => setView("login")}
+          officerRole={officerRole}
+          setOfficerRole={setOfficerRole}
         />
       )}
       {view === "auditoria" && (
-        <AuditoriaScreen onNavigate={(targetView) => setView(targetView)} onLogout={() => setView("login")} />
+        <AuditoriaScreen
+          onNavigate={(targetView) => setView(targetView)}
+          onLogout={() => setView("login")}
+          officerRole={officerRole}
+          setOfficerRole={setOfficerRole}
+        />
       )}
       {view === "usuarios" && (
-        <UsuariosScreen onNavigate={(targetView) => setView(targetView)} onLogout={() => setView("login")} />
+        <UsuariosScreen
+          onNavigate={(targetView) => setView(targetView)}
+          onLogout={() => setView("login")}
+          officerRole={officerRole}
+          setOfficerRole={setOfficerRole}
+        />
       )}
       {view === "reportes" && (
-        <ReportesScreen onNavigate={(targetView) => setView(targetView)} onLogout={() => setView("login")} />
+        <ReportesScreen
+          onNavigate={(targetView) => setView(targetView)}
+          onLogout={() => setView("login")}
+          officerRole={officerRole}
+          setOfficerRole={setOfficerRole}
+        />
       )}
     </div>
   );
